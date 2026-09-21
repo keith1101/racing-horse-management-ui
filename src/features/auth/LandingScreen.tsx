@@ -201,13 +201,6 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
             </div>
             <button
               onClick={onSignIn}
-              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--color-text-primary)] shadow-xs transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-subtle)] focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
-            >
-              <Icon name="user" size={14} />
-              <span>Sign in</span>
-            </button>
-            <button
-              onClick={onSignIn}
               className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-primary)] px-4 py-1.5 text-[13px] font-semibold text-[var(--color-text-inverse)] shadow-xs transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
             >
               <span>Access RTMS</span>
@@ -767,8 +760,8 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
                   onClick={onSignIn}
                   className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-primary)] px-4 py-2 text-[13px] font-semibold text-white shadow-xs transition-colors hover:bg-[var(--color-primary-hover)]"
                 >
-                  <Icon name="user" size={14} />
-                  <span>Sign in to Platform</span>
+                  <span>Access RTMS</span>
+                  <Icon name="chevron-right" size={14} />
                 </button>
               </div>
             </div>
