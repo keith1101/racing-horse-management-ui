@@ -128,7 +128,7 @@ function TrainingDashboard() {
     >
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         <MetricCard label="Active training" value={activeTraining} unit="horses" icon="activity" tone="info" />
-        <MetricCard label="Sessions today" value={todaySessions.filter((s) => s.date === '20 Sep' || s.date === '22 Sep').length} unit="planned" icon="calendar" />
+        <MetricCard label="Workouts today" value={todaySessions.filter((s) => s.date === '20 Sep' || s.date === '22 Sep').length} unit="planned" icon="calendar" />
         <MetricCard label="Requires attention" value={attention} unit="horses" icon="alert-triangle" tone={attention ? 'warning' : 'default'} />
         <MetricCard label="Avg readiness" value={avgReadiness} unit="%" icon="gauge" tone={avgReadiness >= 70 ? 'success' : 'warning'} />
         <MetricCard label="Training-restricted" value={restricted} unit="horses" icon="lock" tone={restricted ? 'danger' : 'default'} />

@@ -89,7 +89,6 @@ export function HorseTable({ horses, selectedId, onSelect, loading }: HorseTable
         <EmptyState
           icon="search"
           title="No horses match"
-          description="Adjust your search or filters to see results."
         />
       }
     />

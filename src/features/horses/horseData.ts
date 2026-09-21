@@ -382,7 +382,7 @@ export const HORSES: Horse[] = [
       { time: '15:30', type: 'Race', title: 'Race declaration review', staff: 'E. Cardoso' },
     ],
     activity: [
-      { time: '20 Sep, 06:35', actor: 'E. Cardoso', event: 'Completed final prep session' },
+      { time: '20 Sep, 06:35', actor: 'E. Cardoso', event: 'Completed final prep workout' },
       { time: '16 Sep, 15:00', actor: 'E. Cardoso', event: 'Marked race-ready' },
     ],
   },

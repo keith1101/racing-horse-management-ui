@@ -40,7 +40,7 @@ export function HorseMasterList({
           value={search}
           onChange={onSearch}
           label="Search horses"
-          placeholder="Search name, owner, microchip…"
+          placeholder="Search horses…"
         />
         <div className="flex items-center gap-1 overflow-x-auto scroll-slim">
           <FilterChip
@@ -80,7 +80,6 @@ export function HorseMasterList({
           <EmptyState
             icon="search"
             title="No horses match"
-            description="Try a different search term or clear the active filters."
           />
         ) : (
           <div className="space-y-0.5">

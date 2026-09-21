@@ -50,7 +50,7 @@ export function TrainingSessionDetail() {
   if (!session) {
     return (
       <Screen
-        title="Training session"
+        title="Training workout"
         context={
           <button onClick={() => navigate('training')} className="inline-flex items-center gap-1 hover:underline">
             <Icon name="arrow-left" size={13} /> Back to training dashboard
@@ -60,8 +60,8 @@ export function TrainingSessionDetail() {
         <Panel className="p-0">
           <EmptyState
             icon="calendar"
-            title="Session not found"
-            description="This training session is unavailable or the link is out of date."
+            title="Workout not found"
+            description="This training workout is unavailable or the link is out of date."
           />
         </Panel>
       </Screen>
@@ -74,14 +74,14 @@ export function TrainingSessionDetail() {
 
   return (
     <Screen
-      title="Training session"
+      title="Training workout"
       context={
         <button onClick={() => navigate('training')} className="inline-flex items-center gap-1 hover:underline">
           <Icon name="arrow-left" size={13} /> Back to training dashboard
         </button>
       }
     >
-      {/* Session header */}
+      {/* Workout header */}
       <Panel padded>
         <div className="flex flex-wrap items-start gap-4">
           {horse && <HorseAvatar name={horse.name} image={horse.image} size={56} rounded="md" />}
@@ -102,7 +102,7 @@ export function TrainingSessionDetail() {
             </p>
             <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3 lg:grid-cols-4">
               <Field label="Date" value={`${session.date}${session.time ? ` · ${session.time}` : ''}`} />
-              <Field label="Session type" value={session.session} />
+              <Field label="Workout type" value={session.session} />
               <Field label="Distance" value={session.distance} />
               <Field label="Surface" value={session.surface} />
               <Field label="Trainer" value={session.trainer} />
@@ -133,7 +133,7 @@ export function TrainingSessionDetail() {
         <>
           <Panel padded className="mt-4">
             <div className="mb-3 flex items-center justify-between">
-              <SectionTitle>Session result</SectionTitle>
+              <SectionTitle>Workout result</SectionTitle>
               <Pill tone={assessmentTone[result.assessment]}>{result.assessment}</Pill>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -161,7 +161,7 @@ export function TrainingSessionDetail() {
           <EmptyState
             icon="clock"
             title="Results pending"
-            description="Telemetry and trainer assessment will appear here once this session has been completed."
+            description="Telemetry and trainer assessment will appear here once this workout has been completed."
           />
         </Panel>
       )}

@@ -7,7 +7,6 @@ import { Icon } from '../../components/Icon';
 import { HorseAvatar } from '../horses/HorseAvatar';
 import { useRtms } from '../../app/RtmsContext';
 import { TODAY_SESSIONS } from '../training/trainingData';
-import { UPCOMING_RACES } from '../racing/racingData';
 
 const ROLE_OVERVIEW: Record<ReturnType<typeof useRtms>['currentUser']['role'], { title: string; context: string }> = {
   HEAD_TRAINER: { title: 'Training command', context: 'Today’s training readiness, restrictions and race preparation.' },
@@ -25,7 +24,6 @@ export function OverviewScreen() {
   const canViewPrivateMedical = can('medical.private.view');
   const canViewVetModule = can('module.veterinary.view');
   const canViewTrainingModule = can('module.training.view');
-  const canViewRacingModule = can('module.racing.view');
 
   const count = (fn: (h: (typeof horses)[number]) => boolean) => horses.filter(fn).length;
   const restricted = horses.filter((h) => isLocked(h.id));
@@ -93,28 +91,6 @@ export function OverviewScreen() {
             </div>
           </Panel>}
 
-          {canViewRacingModule && <Panel padded>
-            <div className="mb-3 flex items-center justify-between">
-              <SectionTitle>Upcoming races</SectionTitle>
-              {canViewRacingModule && <button onClick={() => navigate('racing')} className="text-[12px] font-medium text-[var(--color-primary)] hover:underline">Racing</button>}
-            </div>
-            <div className="space-y-1.5">
-              {UPCOMING_RACES.filter((r) => r.entries.some((entry) => horseIds.has(entry.horseId))).map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => navigate('racing')}
-                  className="flex w-full items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-left outline-none transition-colors hover:border-[var(--color-border-strong)] focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
-                >
-                  <span className="font-metric w-16 shrink-0 text-[12px] text-[var(--color-text-secondary)]">{r.date.slice(0, 6)}</span>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[13px] font-medium text-[var(--color-text-primary)]">{r.name}</div>
-                    <div className="truncate text-[11px] text-[var(--color-text-muted)]">{r.course} · {r.distance} · {r.entries.length} entered</div>
-                  </div>
-                  <Pill tone={r.status === 'Confirmed' ? 'success' : r.status === 'Declared' ? 'primary' : 'neutral'} size="sm">{r.status}</Pill>
-                </button>
-              ))}
-            </div>
-          </Panel>}
         </div>
 
         {/* Right: attention + issues */}

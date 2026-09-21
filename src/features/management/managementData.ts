@@ -122,7 +122,7 @@ export const INVOICES: Invoice[] = [
     lineItems: [
       { label: 'Training fee — Royal Cadence (Jul)', amount: '£1,950' },
       { label: 'Transport to trial', amount: '£360' },
-      { label: 'Physiotherapy sessions', amount: '£300' },
+      { label: 'Physiotherapy visits', amount: '£300' },
     ],
   },
   {

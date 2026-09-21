@@ -351,7 +351,7 @@ export function CourseCatalogDrawer({ open, onClose, onSelectCourse }: CourseCat
                 </Panel>
 
                 <Panel padded>
-                  <SectionTitle>Course Subjects ({activeCourse.subjects.length} ordered sessions)</SectionTitle>
+                  <SectionTitle>Course Subjects ({activeCourse.subjects.length} ordered workouts)</SectionTitle>
                   <div className="mt-2.5 space-y-2">
                     {activeCourse.subjects.map((s) => (
                       <div
@@ -406,4 +406,3 @@ export function CourseCatalogDrawer({ open, onClose, onSelectCourse }: CourseCat
     </Drawer>
   );
 }
-

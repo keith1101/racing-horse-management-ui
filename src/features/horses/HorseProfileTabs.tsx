@@ -177,7 +177,7 @@ export function HorseTrainingTab({ horse }: { horse: Horse }) {
 
   const sessionColumns: Column<TrainingSession>[] = [
     { key: 'date', header: 'Date', width: '80px', render: (s) => <span className="font-metric text-[12px] text-[var(--color-text-secondary)]">{s.date}</span> },
-    { key: 'session', header: 'Session', render: (s) => <span className="text-[13px] text-[var(--color-text-primary)]">{s.session}</span> },
+    { key: 'session', header: 'Workout', render: (s) => <span className="text-[13px] text-[var(--color-text-primary)]">{s.session}</span> },
     { key: 'distance', header: 'Distance', render: (s) => <span className="font-metric text-[12px]">{s.distance}</span> },
     { key: 'load', header: 'Load', width: '90px', render: (s) => <Pill tone="neutral" size="sm">{s.load}</Pill> },
     { key: 'status', header: 'Status', width: '110px', render: (s) => <Pill tone={s.status === 'Completed' ? 'success' : s.status === 'In progress' ? 'primary' : s.status === 'Scheduled' ? 'info' : 'neutral'} size="sm">{s.status}</Pill> },
@@ -213,7 +213,7 @@ export function HorseTrainingTab({ horse }: { horse: Horse }) {
           <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
             <Meta label="Current phase" value={summary.phase} />
             <Meta label="Trainer" value={summary.trainer} />
-            <Meta label="Sessions" value={summary.sessions} />
+            <Meta label="Workouts" value={summary.sessions} />
             <Meta label="Target" value={summary.target} />
           </div>
           <div className="mt-3">
@@ -227,7 +227,7 @@ export function HorseTrainingTab({ horse }: { horse: Horse }) {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Panel padded>
-          <SectionTitle>Upcoming sessions</SectionTitle>
+          <SectionTitle>Upcoming workouts</SectionTitle>
           {upcoming.length ? (
             <ul className="mt-3 space-y-1.5">
               {upcoming.slice(0, 5).map((s) => (
@@ -238,7 +238,7 @@ export function HorseTrainingTab({ horse }: { horse: Horse }) {
                 </li>
               ))}
             </ul>
-          ) : <p className="mt-3 text-[13px] text-[var(--color-text-muted)]">No upcoming sessions scheduled.</p>}
+          ) : <p className="mt-3 text-[13px] text-[var(--color-text-muted)]">No upcoming workouts scheduled.</p>}
         </Panel>
 
         <Panel padded>
@@ -253,14 +253,14 @@ export function HorseTrainingTab({ horse }: { horse: Horse }) {
                 </li>
               ))}
             </ul>
-          ) : <p className="mt-3 text-[13px] text-[var(--color-text-muted)]">No completed sessions with results yet.</p>}
+          ) : <p className="mt-3 text-[13px] text-[var(--color-text-muted)]">No completed workouts with results yet.</p>}
         </Panel>
       </div>
 
       <Panel padded>
-        <SectionTitle>Session log</SectionTitle>
+        <SectionTitle>Workout log</SectionTitle>
         <div className="mt-3">
-          <DataTable columns={sessionColumns} rows={sessions} rowKey={(s) => s.id} onRowClick={(s) => navigate('training', { view: 'session', refId: s.id })} empty={<EmptyState icon="activity" title="No sessions logged" />} />
+          <DataTable columns={sessionColumns} rows={sessions} rowKey={(s) => s.id} onRowClick={(s) => navigate('training', { view: 'session', refId: s.id })} empty={<EmptyState icon="activity" title="No workouts logged" />} />
         </div>
       </Panel>
     </div>

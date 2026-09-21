@@ -137,13 +137,13 @@ export function TrainingScheduleScreen() {
 
       {groups.length === 0 ? (
         <Panel className="mt-4 p-0">
-          <EmptyState icon="calendar" title="No sessions scheduled" description="No training sessions match the current filters." />
+          <EmptyState icon="calendar" title="No workouts scheduled" description="No workouts match the current filters." />
         </Panel>
       ) : span === 'Week' ? (
         <Panel padded className="mt-4 overflow-x-auto">
           <div className="mb-4 flex items-center justify-between">
             <SectionTitle>Week of 20–26 Sep 2026</SectionTitle>
-            <span className="text-[11px] text-[var(--color-text-muted)]">{filtered.length} scheduled sessions</span>
+            <span className="text-[11px] text-[var(--color-text-muted)]">{filtered.length} scheduled workouts</span>
           </div>
           <div className="grid min-w-[980px] grid-cols-7 border-l border-t border-[var(--color-border)]">
             {WEEK_DAYS.map((day) => {
@@ -188,7 +188,7 @@ export function TrainingScheduleScreen() {
             <Panel key={group.date} padded>
               <div className="mb-3 flex items-center justify-between">
                 <SectionTitle>{group.date}</SectionTitle>
-                <span className="font-metric text-[11px] text-[var(--color-text-muted)]">{group.sessions.length} sessions</span>
+                <span className="font-metric text-[11px] text-[var(--color-text-muted)]">{group.sessions.length} workouts</span>
               </div>
               <div className="space-y-1.5">
                 {group.sessions.map((s) => {
@@ -223,7 +223,7 @@ export function TrainingScheduleScreen() {
                           size="sm"
                           icon="check"
                           disabled={st === 'Completed'}
-                          onClick={() => updateStatus(s, 'Completed', `${s.horseName} session marked complete`)}
+                          onClick={() => updateStatus(s, 'Completed', `${s.horseName} workout marked complete`)}
                         >
                           Complete
                         </Button>
@@ -231,7 +231,7 @@ export function TrainingScheduleScreen() {
                           variant="tertiary"
                           size="sm"
                           icon="clock"
-                          onClick={() => updateStatus(s, 'Scheduled', `${s.horseName} session delayed`)}
+                          onClick={() => updateStatus(s, 'Scheduled', `${s.horseName} workout delayed`)}
                         >
                           Delay
                         </Button>
@@ -240,7 +240,7 @@ export function TrainingScheduleScreen() {
                           size="sm"
                           icon="x"
                           disabled={st === 'Cancelled'}
-                          onClick={() => updateStatus(s, 'Cancelled', `${s.horseName} session cancelled`)}
+                          onClick={() => updateStatus(s, 'Cancelled', `${s.horseName} workout cancelled`)}
                         >
                           Cancel
                         </Button>

@@ -1,4 +1,5 @@
 import { Icon } from '../../components/Icon';
+import { BrandLogo } from '../../components/BrandLogo';
 
 interface LandingScreenProps {
   onSignIn: () => void;
@@ -6,7 +7,7 @@ interface LandingScreenProps {
 
 const HIGHLIGHTS = [
   ['horse', 'Horse operations', 'Profiles, ownership and stable context in one place.'],
-  ['activity', 'Training readiness', 'Plans, weekly sessions and restrictions stay connected.'],
+  ['activity', 'Training readiness', 'Plans, weekly workouts and restrictions stay connected.'],
   ['heart-pulse', 'Clinical oversight', 'Veterinary review and injury mapping for safer decisions.'],
 ] as const;
 
@@ -15,7 +16,7 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
     <main className="min-h-screen overflow-hidden bg-[var(--color-background)]">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-primary)] text-[15px] font-bold text-[var(--color-text-inverse)]">R</span>
+          <BrandLogo className="h-9 w-9" />
           <div>
             <div className="text-[16px] font-semibold tracking-tight text-[var(--color-text-primary)]">RTMS</div>
             <div className="text-[10px] font-medium uppercase tracking-[0.13em] text-[var(--color-text-muted)]">Riverside Training Club</div>

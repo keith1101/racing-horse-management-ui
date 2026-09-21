@@ -98,7 +98,7 @@ export const DETAILED_PLANS: Record<string, TrainingPlan> = {
       {
         id: 'ph-1', name: 'Foundation', focus: 'Aerobic base & soundness', window: '04 – 24 Aug', status: 'Completed',
         sessions: [
-          { id: 'tb-1', time: '', date: '06 Aug', horseId: 'h-thunderbolt', horseName: 'Thunder Bolt', session: 'Long trot', distance: '3,000 m', surface: 'All-weather', load: 'Light', intensity: 40, trainer: 'Elena Cardoso', status: 'Completed', result: { avgSpeed: 22.0, maxSpeed: 28.5, avgHr: 132, maxHr: 158, recoveryMin: 8, assessment: 'On target', notes: 'Settled base session.' } },
+          { id: 'tb-1', time: '', date: '06 Aug', horseId: 'h-thunderbolt', horseName: 'Thunder Bolt', session: 'Long trot', distance: '3,000 m', surface: 'All-weather', load: 'Light', intensity: 40, trainer: 'Elena Cardoso', status: 'Completed', result: { avgSpeed: 22.0, maxSpeed: 28.5, avgHr: 132, maxHr: 158, recoveryMin: 8, assessment: 'On target', notes: 'Settled base workout.' } },
           { id: 'tb-2', time: '', date: '13 Aug', horseId: 'h-thunderbolt', horseName: 'Thunder Bolt', session: 'Steady canter', distance: '2,400 m', surface: 'Turf', load: 'Moderate', intensity: 55, trainer: 'Elena Cardoso', status: 'Completed', result: { avgSpeed: 33.4, maxSpeed: 39.0, avgHr: 156, maxHr: 182, recoveryMin: 12, assessment: 'On target', notes: 'Good rhythm, comfortable action.' } },
         ],
       },
@@ -181,7 +181,7 @@ export const DEFAULT_COURSES: Course[] = [
       { id: 'cs-cl-4', order: 4, title: 'Interval Repetitions', sessionType: 'Intervals', distance: '2 × 1,000 m', surface: 'All-weather', load: 'Hard', intensity: 75, phaseName: 'Conditioning', description: 'Two fast repeats with 4 min active walk.' },
       { id: 'cs-cl-5', order: 5, title: 'Race Pace Gallop', sessionType: 'Gallop', distance: '1,400 m', surface: 'Turf', load: 'Hard', intensity: 80, phaseName: 'Speed development', description: 'Closing sectional drill under hands-and-heels.' },
       { id: 'cs-cl-6', order: 6, title: 'Target Breeze', sessionType: 'Breeze', distance: '1,200 m', surface: 'Turf', load: 'Peak', intensity: 88, phaseName: 'Speed development', description: 'Full match pace simulation.' },
-      { id: 'cs-cl-7', order: 7, title: 'Pre-Race Sharpener', sessionType: 'Sharpener', distance: '800 m', surface: 'Turf', load: 'Moderate', intensity: 60, phaseName: 'Race preparation', description: 'Taper session 4 days out from race.' },
+      { id: 'cs-cl-7', order: 7, title: 'Pre-Race Sharpener', sessionType: 'Sharpener', distance: '800 m', surface: 'Turf', load: 'Moderate', intensity: 60, phaseName: 'Race preparation', description: 'Taper workout 4 days out from race.' },
       { id: 'cs-cl-8', order: 8, title: 'Light Bridle Stretch', sessionType: 'Canter', distance: '1,000 m', surface: 'Turf', load: 'Recovery', intensity: 30, phaseName: 'Race preparation', description: 'Final limbering and mental calm.' },
     ],
   },
@@ -300,4 +300,3 @@ export function generateWorkoutsFromCourse(
 
   return { phases, allSessions: sessions };
 }
-

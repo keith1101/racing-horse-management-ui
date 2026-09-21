@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRtms, type ModuleId } from '../app/RtmsContext';
+import { BrandLogo } from './BrandLogo';
 import { Icon } from './Icon';
 import { IconButton } from './IconButton';
 
@@ -49,9 +50,7 @@ export function TopNav({ active, onNavigate }: TopNavProps) {
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-6 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4">
       <div className="flex items-center gap-2">
-        <span className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-primary)] text-[13px] font-bold text-[var(--color-text-inverse)]">
-          R
-        </span>
+        <BrandLogo className="h-7 w-7" />
         <span className="text-[15px] font-semibold tracking-tight text-[var(--color-text-primary)]">RTMS</span>
       </div>
 

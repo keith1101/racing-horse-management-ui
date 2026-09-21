@@ -96,8 +96,7 @@ function HorseManagementListScreen() {
         title="Horses"
         context={
           <>
-            {HORSES.length} active horses · Riverside Training Club ·{' '}
-            <span className="text-[var(--color-text-muted)]">Updated 20 Sep 2026, 08:12</span>
+            {HORSES.length} active horses · Riverside Training Club
           </>
         }
         secondary={
@@ -197,7 +196,6 @@ function HorseManagementListScreen() {
                 <EmptyState
                   icon="search"
                   title="No horses match"
-                  description="Adjust your search or filters to see results."
                   action={
                     hasActiveFilters ? (
                       <Button variant="secondary" size="sm" onClick={clearFilters}>
@@ -287,7 +285,7 @@ function SearchWrap({ value, onChange }: { value: string; onChange: (v: string) 
       value={value}
       onChange={onChange}
       label="Search horses"
-      placeholder="Search name, owner, microchip…"
+      placeholder="Search horses…"
     />
   );
 }

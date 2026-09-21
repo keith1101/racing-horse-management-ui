@@ -118,7 +118,7 @@ export function TrainingPlansList() {
       ),
       sortValue: (p) => p.progress,
     },
-    { key: 'sessions', header: 'Sessions', render: (p) => <span className="font-metric text-[12px]">{p.sessions}</span> },
+    { key: 'sessions', header: 'Workouts', render: (p) => <span className="font-metric text-[12px]">{p.sessions}</span> },
     { key: 'target', header: 'Target date', render: (p) => <span className="font-metric text-[12px] text-[var(--color-text-secondary)]">{p.target}</span>, sortValue: (p) => p.target },
     {
       key: 'action',

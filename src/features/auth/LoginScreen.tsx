@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Icon } from '../../components/Icon';
+import { BrandLogo } from '../../components/BrandLogo';
 import { useRtms } from '../../app/RtmsContext';
 
 const inputClassName =
@@ -25,7 +26,7 @@ export function LoginScreen({ onBack }: { onBack?: () => void }) {
     <main className="flex min-h-screen items-center justify-center bg-[var(--color-background)] px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 flex items-center justify-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-primary)] text-[15px] font-bold text-[var(--color-text-inverse)]">R</span>
+          <BrandLogo className="h-9 w-9" />
           <span className="text-[18px] font-semibold tracking-tight text-[var(--color-text-primary)]">RTMS</span>
         </div>
         {onBack && <button onClick={onBack} className="mb-4 flex items-center gap-1 text-[12px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"><Icon name="arrow-left" size={13} /> Back to RTMS</button>}

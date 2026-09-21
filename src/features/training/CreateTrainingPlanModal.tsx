@@ -230,7 +230,7 @@ export function CreateTrainingPlanModal({ open, onClose, preselectedHorseId }: C
             <Panel padded>
               <div className="flex items-center justify-between">
                 <SectionTitle>
-                  Generated Workouts Preview ({preview.allSessions.length} sessions across {preview.phases.length} phases)
+                  Generated Workouts Preview ({preview.allSessions.length} workouts across {preview.phases.length} phases)
                 </SectionTitle>
                 <span className="text-[11px] text-[var(--color-text-muted)]">
                   Mapped across: {selectedDays.join(', ')}

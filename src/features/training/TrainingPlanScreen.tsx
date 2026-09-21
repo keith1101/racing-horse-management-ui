@@ -58,7 +58,7 @@ export function TrainingPlanScreen() {
           <EmptyState
             icon="clipboard"
             title="No detailed plan for this horse yet"
-            description="This horse does not have a structured, session-level training plan. Select a course template to generate a new workout schedule."
+            description="This horse does not have a structured, workout-level training plan. Select a course template to generate a new workout schedule."
             action={
               <div className="flex items-center gap-2">
                 <Button variant="secondary" size="sm" icon="arrow-left" onClick={() => navigate('training')}>
@@ -84,7 +84,7 @@ export function TrainingPlanScreen() {
 
   const columns: Column<TrainingSession>[] = [
     { key: 'date', header: 'Date', width: '72px', render: (s) => <span className="font-metric text-[12px] text-[var(--color-text-secondary)]">{s.date}</span>, sortValue: (s) => s.date },
-    { key: 'session', header: 'Session', render: (s) => <span className="text-[13px] font-medium">{s.session}</span> },
+    { key: 'session', header: 'Workout', render: (s) => <span className="text-[13px] font-medium">{s.session}</span> },
     { key: 'distance', header: 'Distance', render: (s) => <span className="font-metric text-[12px]">{s.distance}</span> },
     { key: 'surface', header: 'Surface', render: (s) => <span className="text-[12px] text-[var(--color-text-secondary)]">{s.surface}</span> },
     { key: 'load', header: 'Load', render: (s) => <Pill tone={loadTone[s.load]} size="sm">{s.load}</Pill> },
@@ -164,7 +164,7 @@ export function TrainingPlanScreen() {
         )}
       </Panel>
 
-      {/* Phases + sessions */}
+      {/* Phases + workouts */}
       <div className="mt-4 space-y-4">
         {plan.phases.map((phase) => (
           <Panel key={phase.id} padded>
@@ -230,7 +230,7 @@ export function TrainingPlanScreen() {
           </div>
         ) : (
           <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-            Select a completed session's result to view telemetry and assessment.
+            Select a completed workout's result to view telemetry and assessment.
           </p>
         )}
       </Panel>

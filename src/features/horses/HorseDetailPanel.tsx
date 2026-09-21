@@ -33,7 +33,6 @@ export function HorseDetailPanel({ horse, loading, onBack }: HorseDetailPanelPro
         <EmptyState
           icon="list"
           title="Select a horse"
-          description="Choose a horse from the list to view its overview, health, and training context."
         />
       </div>
     );

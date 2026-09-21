@@ -204,7 +204,7 @@ export const MEDICAL_RECORDS: Record<string, MedicalRecord> = {
         symptoms: ['Slow recovery after work (trainer report)'],
         findings: ['Resting HR 44 bpm (elevated from 34 baseline)', 'No murmur on auscultation'],
         diagnosis: 'Elevated resting heart rate — under investigation',
-        recommendation: 'Continuous cardiac telemetry during next 3 sessions. Bloodwork pending.',
+        recommendation: 'Continuous cardiac telemetry during next 3 workouts. Bloodwork pending.',
       },
     ],
     treatment: {
