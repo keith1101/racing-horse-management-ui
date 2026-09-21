@@ -1,4 +1,4 @@
-import logoSrc from '../../artifacts/logo/logo.jpg';
+import logoSrc from '../assets/logo.jpg';
 
 interface BrandLogoProps {
   className?: string;

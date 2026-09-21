@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import logoSrc from '../artifacts/logo/logo.jpg'
+import logoSrc from './assets/logo.jpg'
 import App from './App'
 import './index.css'
 
