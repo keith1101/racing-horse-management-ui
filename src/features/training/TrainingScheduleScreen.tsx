@@ -17,6 +17,16 @@ const statusTone: Record<TrainingSession['status'], 'success' | 'warning' | 'pri
   Cancelled: 'warning',
 };
 
+const WEEK_DAYS = [
+  { key: '20 Sep', label: 'Sun', day: '20' },
+  { key: '21 Sep', label: 'Mon', day: '21' },
+  { key: '22 Sep', label: 'Tue', day: '22' },
+  { key: '23 Sep', label: 'Wed', day: '23' },
+  { key: '24 Sep', label: 'Thu', day: '24' },
+  { key: '25 Sep', label: 'Fri', day: '25' },
+  { key: '26 Sep', label: 'Sat', day: '26' },
+] as const;
+
 function uniq(values: string[]): { value: string; label: string }[] {
   return Array.from(new Set(values)).map((v) => ({ value: v, label: v }));
 }
@@ -26,7 +36,7 @@ export function TrainingScheduleScreen() {
   const canLog = can('training.log');
   const [trainer, setTrainer] = useState('');
   const [status, setStatus] = useState('');
-  const [span, setSpan] = useState<'Day' | 'Week'>('Day');
+  const [span, setSpan] = useState<'Day' | 'Week'>('Week');
   const [overrides, setOverrides] = useState<Record<string, TrainingSession['status']>>({});
 
   const trainerOptions = useMemo(() => uniq(TODAY_SESSIONS.map((s) => s.trainer)), []);
@@ -128,6 +138,49 @@ export function TrainingScheduleScreen() {
       {groups.length === 0 ? (
         <Panel className="mt-4 p-0">
           <EmptyState icon="calendar" title="No sessions scheduled" description="No training sessions match the current filters." />
+        </Panel>
+      ) : span === 'Week' ? (
+        <Panel padded className="mt-4 overflow-x-auto">
+          <div className="mb-4 flex items-center justify-between">
+            <SectionTitle>Week of 20–26 Sep 2026</SectionTitle>
+            <span className="text-[11px] text-[var(--color-text-muted)]">{filtered.length} scheduled sessions</span>
+          </div>
+          <div className="grid min-w-[980px] grid-cols-7 border-l border-t border-[var(--color-border)]">
+            {WEEK_DAYS.map((day) => {
+              const sessions = filtered
+                .filter((session) => session.date === day.key)
+                .sort((a, b) => a.time.localeCompare(b.time));
+              return (
+                <div key={day.key} className="min-h-[340px] border-b border-r border-[var(--color-border)] bg-[var(--color-surface)]">
+                  <div className="flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2">
+                    <span className="text-[11px] font-semibold text-[var(--color-text-secondary)]">{day.label}</span>
+                    <span className="font-metric text-[13px] font-semibold text-[var(--color-text-primary)]">{day.day}</span>
+                  </div>
+                  <div className="space-y-2 p-2">
+                    {sessions.map((session) => {
+                      const locked = isLocked(session.horseId);
+                      const sessionStatus = effectiveStatus(session);
+                      return (
+                        <button
+                          key={session.id}
+                          onClick={() => navigate('training', { view: 'session', refId: session.id })}
+                          className="block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] p-2 text-left outline-none transition-colors hover:border-[var(--color-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="font-metric text-[10px] font-medium text-[var(--color-text-secondary)]">{session.time}</span>
+                            <Pill tone={statusTone[sessionStatus]} size="sm">{sessionStatus}</Pill>
+                          </div>
+                          <div className="mt-1.5 truncate text-[12px] font-semibold text-[var(--color-text-primary)]">{session.horseName}</div>
+                          <div className="mt-0.5 line-clamp-2 text-[10px] leading-relaxed text-[var(--color-text-muted)]">{session.session} · {session.distance}</div>
+                          {locked && <div className="mt-1 flex items-center gap-1 text-[10px] text-[var(--color-danger)]"><Icon name="lock" size={10} /> Restricted</div>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </Panel>
       ) : (
         <div className="mt-4 space-y-4">
