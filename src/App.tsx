@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, useState, type ErrorInfo, type ReactNode } from 'react';
 import { RtmsProvider, useRtms } from './app/RtmsContext';
 import { HorseManagementScreen } from './features/horses/HorseManagementScreen';
 import { OverviewScreen } from './features/overview/OverviewScreen';
@@ -8,10 +8,15 @@ import { StableCareScreen } from './features/care/StableCareScreen';
 import { RacingScreen } from './features/racing/RacingScreen';
 import { ManagementScreen } from './features/management/ManagementScreen';
 import { LoginScreen } from './features/auth/LoginScreen';
+import { LandingScreen } from './features/auth/LandingScreen';
 
 function AppContent() {
   const { isAuthenticated } = useRtms();
-  return isAuthenticated ? <Router /> : <LoginScreen />;
+  const [publicScreen, setPublicScreen] = useState<'landing' | 'login'>('landing');
+  if (isAuthenticated) return <Router />;
+  return publicScreen === 'landing'
+    ? <LandingScreen onSignIn={() => setPublicScreen('login')} />
+    : <LoginScreen onBack={() => setPublicScreen('landing')} />;
 }
 
 function Router() {

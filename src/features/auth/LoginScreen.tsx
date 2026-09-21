@@ -5,7 +5,7 @@ import { useRtms } from '../../app/RtmsContext';
 const inputClassName =
   'mt-1 h-10 w-full rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[13px] text-[var(--color-text-primary)] outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-focus)] focus:ring-2 focus:ring-[var(--color-focus)]/30';
 
-export function LoginScreen() {
+export function LoginScreen({ onBack }: { onBack?: () => void }) {
   const { login } = useRtms();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,6 +28,7 @@ export function LoginScreen() {
           <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-primary)] text-[15px] font-bold text-[var(--color-text-inverse)]">R</span>
           <span className="text-[18px] font-semibold tracking-tight text-[var(--color-text-primary)]">RTMS</span>
         </div>
+        {onBack && <button onClick={onBack} className="mb-4 flex items-center gap-1 text-[12px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"><Icon name="arrow-left" size={13} /> Back to RTMS</button>}
 
         <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-xl shadow-black/5">
           <div className="mb-6">
