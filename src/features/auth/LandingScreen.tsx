@@ -216,11 +216,6 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
           <div className="grid items-center gap-12 lg:grid-cols-12">
             {/* Left Hero Content */}
             <div className="lg:col-span-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-primary-soft)] px-3 py-1 text-[11px] font-semibold tracking-wider text-[var(--color-primary)] uppercase">
-                <Icon name="shield" size={13} />
-                <span>Thoroughbred Racing & Operations Platform</span>
-              </div>
-
               <h1 className="mt-5 text-[36px] font-bold leading-[1.12] tracking-tight text-[var(--color-text-primary)] sm:text-[46px] lg:text-[50px]">
                 Peak performance. <br />
                 <span className="bg-gradient-to-r from-[var(--color-primary)] to-[#8572ea] bg-clip-text text-transparent">

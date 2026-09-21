@@ -7,7 +7,8 @@ import {
   type ReactNode,
 } from 'react';
 import { ToastStack, type ToastMessage } from '../components/Toast';
-import { HORSES, type Horse, type TrainingLock } from '../features/horses/horseData';
+import { HORSES, MAX_STALLS_PER_GROOM, type Horse, type TrainingLock } from '../features/horses/horseData';
+import { CARE_TASKS, type CareTask } from '../features/care/careData';
 import { CANDIDATES, type Candidate, type CandidateStatus } from '../features/management/candidateData';
 import {
   getMedicalRecord as getStaticMedicalRecord,
@@ -25,6 +26,7 @@ import {
   type CourseSubject,
   type TrainingPlan,
   type TrainingSession,
+  type TrainingResult,
 } from '../features/training/trainingData';
 import {
   INITIAL_RACE_PROPOSALS,
@@ -68,10 +70,12 @@ export interface ReportedIssue {
   horseName: string;
   category: string;
   observation: string;
-  severity: 'Low' | 'Moderate' | 'High';
+  severity: 'Low' | 'Moderate' | 'High' | 'Critical' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   reportedBy: string;
   time: string;
-  status: 'New' | 'Under review' | 'Resolved';
+  status: 'New' | 'Under review' | 'Resolved' | 'Pending Vet check' | 'Under treatment';
+  title?: string;
+  imageUrl?: string;
 }
 
 export interface NotificationItem {
@@ -121,10 +125,16 @@ interface RtmsContextValue {
   lockTraining: (horseId: string, lock: TrainingLock) => void;
   unlockTraining: (horseId: string) => void;
 
-  // Groom-reported issues (cross-module: Stable Care -> Veterinary)
+  // Groom care tasks & reported issues
+  careTasks: CareTask[];
+  completeCareTask: (taskId: string) => void;
   issues: ReportedIssue[];
   reportIssue: (issue: Omit<ReportedIssue, 'id' | 'status' | 'time'>) => void;
   updateIssueStatus: (id: string, status: ReportedIssue['status']) => void;
+
+  // Stall & Groom assignment (Trainer management)
+  stallAssignments: Record<string, string>;
+  assignGroomToStall: (stallCode: string, groomName: string) => { success: boolean; message: string };
 
   // Candidate admission workflow
   candidateStatuses: Record<string, CandidateStatus>;
@@ -136,12 +146,13 @@ interface RtmsContextValue {
   assignCandidateStall: (id: string, stable: string, stall: string) => void;
   approveCandidate: (candidate: Candidate) => void;
 
-  // Training Courses & Automated Workout Planning
+  // Training Courses, Sessions & Logging
   courses: Course[];
   addCourse: (course: Course) => void;
   detailedPlans: Record<string, TrainingPlan>;
   trainingPlanSummaries: typeof TRAINING_PLAN_SUMMARIES;
   todaySessions: TrainingSession[];
+  logWorkoutResult: (sessionId: string, result: TrainingResult) => void;
   createHorseTrainingPlan: (
     horseId: string,
     courseId: string,
@@ -202,6 +213,15 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
   const [lockOverrides, setLockOverrides] = useState<Record<string, TrainingLock | null>>({});
   const [additionalHorses, setAdditionalHorses] = useState<Horse[]>([]);
   const [medicalRecords, setMedicalRecords] = useState<Record<string, MedicalRecord>>({});
+
+  // Care tasks & stall assignments
+  const [careTasks, setCareTasks] = useState<CareTask[]>(CARE_TASKS);
+  const [stallAssignments, setStallAssignments] = useState<Record<string, string>>(() =>
+    HORSES.reduce((acc, h) => {
+      if (h.assignedGroom) acc[h.stall] = h.assignedGroom;
+      return acc;
+    }, {} as Record<string, string>),
+  );
 
   // Training courses & plan management
   const [courses, setCourses] = useState<Course[]>(DEFAULT_COURSES);
@@ -394,9 +414,11 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
       [...HORSES, ...additionalHorses].map((horse) => {
         const lock = getLock(horse.id);
         const planOverride = horsePlanOverrides[horse.id];
+        const groomOverride = stallAssignments[horse.stall];
         const base = { ...horse, ...planOverride };
         return {
           ...base,
+          assignedGroom: groomOverride ?? base.assignedGroom,
           lock: lock ?? undefined,
           training: lock
             ? ('BLOCKED' as const)
@@ -405,7 +427,7 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
               : base.training,
         };
       }),
-    [additionalHorses, getLock, horsePlanOverrides],
+    [additionalHorses, getLock, horsePlanOverrides, stallAssignments],
   );
 
   // Ownership scope is enforced client-side as a first-pass row-level policy.
@@ -466,6 +488,72 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
     [currentUser.role, recordAudit, toast],
   );
 
+  const completeCareTask = useCallback(
+    (taskId: string) => {
+      const stamp = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      setCareTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: 'Completed' as const, completedAt: stamp } : t)),
+      );
+      const target = careTasks.find((t) => t.id === taskId);
+      if (target) {
+        recordAudit('Completed care task', `${target.horseName} · ${target.type} · Stall ${target.stall}`);
+        toast(`${target.horseName} · ${target.type} completed at ${stamp}`, 'success');
+      }
+    },
+    [careTasks, recordAudit, toast],
+  );
+
+  const assignGroomToStall = useCallback(
+    (stallCode: string, groomName: string) => {
+      if (!canPermission(currentUser.role, 'training.manage')) {
+        toast('Only a Head Trainer can assign grooms to stalls.', 'danger');
+        return { success: false, message: 'Unauthorized' };
+      }
+
+      if (groomName) {
+        const assignedStallsCount = Object.entries(stallAssignments).filter(
+          ([stall, groom]) => groom === groomName && stall !== stallCode,
+        ).length;
+
+        if (assignedStallsCount >= MAX_STALLS_PER_GROOM) {
+          const msg = `${groomName} is already assigned to the maximum limit of ${MAX_STALLS_PER_GROOM} stalls.`;
+          toast(msg, 'danger');
+          return { success: false, message: msg };
+        }
+      }
+
+      setStallAssignments((prev) => ({ ...prev, [stallCode]: groomName }));
+      const horse = allHorses.find((h) => h.stall === stallCode);
+      recordAudit('Assigned groom to stall', `Stall ${stallCode} (${horse?.name ?? 'Stall'}) → ${groomName || 'Unassigned'}`);
+      toast(`Assigned ${groomName || 'Unassigned'} to Stall ${stallCode}`, 'success');
+      return { success: true, message: 'Groom assigned successfully' };
+    },
+    [allHorses, currentUser.role, recordAudit, stallAssignments, toast],
+  );
+
+  const logWorkoutResult = useCallback(
+    (sessionId: string, result: TrainingResult) => {
+      if (!canPermission(currentUser.role, 'training.log') && !canPermission(currentUser.role, 'training.manage')) {
+        toast('Only training staff can record workout results.', 'danger');
+        return;
+      }
+
+      setTodaySessions((prev) =>
+        prev.map((s) => (s.id === sessionId ? { ...s, status: 'Completed' as const, result } : s)),
+      );
+
+      const target = todaySessions.find((s) => s.id === sessionId);
+      if (target) {
+        recordAudit(
+          'Logged workout result',
+          `${target.horseName} · Max ${result.maxSpeed} km/h · ${result.rating ?? 5}★ · ${result.assessment}`,
+        );
+        toast(`Logged workout result for ${target.horseName}`, 'success');
+      }
+    },
+    [currentUser.role, recordAudit, toast, todaySessions],
+  );
+
   const reportIssue = useCallback<RtmsContextValue['reportIssue']>(
     (issue) => {
       if (!canPermission(currentUser.role, 'stable-care.report_incident')) {
@@ -473,13 +561,13 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
         return;
       }
       setIssues((previous) => [
-        { ...issue, id: `iss-${Date.now()}`, status: 'New', time: nowStamp() },
+        { ...issue, id: `iss-${Date.now()}`, status: 'Pending Vet check', time: nowStamp() },
         ...previous,
       ]);
       setNotifications((items) => [
         {
           id: `notification-${Date.now()}`,
-          title: 'New stable-care issue',
+          title: issue.title || 'New stable-care incident',
           detail: `${issue.horseName} · ${issue.category} · ${issue.severity}`,
           time: 'Just now',
           unread: true,
@@ -487,7 +575,7 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
         },
         ...items,
       ]);
-      recordAudit('Reported stable-care issue', `${issue.horseName} · ${issue.category}`);
+      recordAudit('Reported stable incident', `${issue.horseName} · ${issue.title || issue.category}`);
     },
     [currentUser.role, recordAudit, toast],
   );
@@ -871,6 +959,10 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
     issues,
     reportIssue,
     updateIssueStatus,
+    careTasks,
+    completeCareTask,
+    stallAssignments,
+    assignGroomToStall,
     candidateStatuses,
     candidates: visibleCandidates,
     addCandidate,
@@ -884,6 +976,7 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
     detailedPlans,
     trainingPlanSummaries,
     todaySessions,
+    logWorkoutResult,
     createHorseTrainingPlan,
     raceEvents,
     raceProposals,

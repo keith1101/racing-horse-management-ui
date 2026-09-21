@@ -3,7 +3,7 @@ export type SessionIntensity = 'Recovery' | 'Light' | 'Moderate' | 'Hard' | 'Pea
 
 export interface TrainingSession {
   id: string;
-  time: string; // today's schedule time
+  time: string; // today's schedule time (Golden Hours: 06:30 - 09:30 AM)
   date: string; // ISO-ish display date for plan tables
   horseId: string;
   horseName: string;
@@ -13,16 +13,19 @@ export interface TrainingSession {
   load: SessionIntensity;
   intensity: number; // 0-100 planned effort
   trainer: string;
+  assignedGroom?: string;
   status: SessionStatus;
   result?: TrainingResult;
 }
 
 export interface TrainingResult {
   avgSpeed: number; // km/h
-  maxSpeed: number;
+  maxSpeed: number; // km/h
   avgHr: number; // bpm
-  maxHr: number;
+  maxHr: number; // bpm
   recoveryMin: number; // minutes to return to resting band
+  durationMin?: number; // workout duration in minutes
+  rating?: number; // 1 to 5 stars performance rating
   assessment: 'Excellent' | 'On target' | 'Below target' | 'Fatigued';
   notes: string;
 }
@@ -49,15 +52,135 @@ export interface TrainingPlan {
   phases: TrainingPhase[];
 }
 
-/** Today's training schedule (Head Trainer dashboard). */
+/** Today's training schedule (Head Trainer dashboard) — Golden Hour 06:30 - 09:30 AM */
 export const TODAY_SESSIONS: TrainingSession[] = [
-  { id: 'ts-1', time: '06:00', date: '20 Sep', horseId: 'h-silvercomet', horseName: 'Silver Comet', session: 'Breeze', distance: '1,000 m', surface: 'All-weather', load: 'Hard', intensity: 82, trainer: 'Tomas Reyes', status: 'Completed', result: { avgSpeed: 47.4, maxSpeed: 51.8, avgHr: 178, maxHr: 214, recoveryMin: 11, assessment: 'Excellent', notes: 'Strong closing sectional, relaxed through the bridle.' } },
-  { id: 'ts-2', time: '06:15', date: '20 Sep', horseId: 'h-ironwill', horseName: 'Iron Will', session: 'Steady gallop', distance: '2,000 m', surface: 'Turf', load: 'Moderate', intensity: 58, trainer: 'Tomas Reyes', status: 'Completed', result: { avgSpeed: 39.1, maxSpeed: 44.0, avgHr: 171, maxHr: 199, recoveryMin: 19, assessment: 'Below target', notes: 'Recovery HR slower than baseline — flagged for telemetry review.' } },
-  { id: 'ts-3', time: '06:30', date: '20 Sep', horseId: 'h-thunderbolt', horseName: 'Thunder Bolt', session: 'Gallop', distance: '1,400 m', surface: 'Turf', load: 'Hard', intensity: 78, trainer: 'Elena Cardoso', status: 'In progress' },
-  { id: 'ts-4', time: '06:45', date: '20 Sep', horseId: 'h-royalcadence', horseName: 'Royal Cadence', session: 'Gallop', distance: '1,200 m', surface: 'Turf', load: 'Moderate', intensity: 64, trainer: 'Elena Cardoso', status: 'Scheduled' },
-  { id: 'ts-5', time: '07:00', date: '20 Sep', horseId: 'h-shadowdancer', horseName: 'Shadow Dancer', session: 'Distance gallop', distance: '1,600 m', surface: 'Turf', load: 'Moderate', intensity: 60, trainer: 'Elena Cardoso', status: 'Scheduled' },
-  { id: 'ts-6', time: '07:30', date: '20 Sep', horseId: 'h-emberqueen', horseName: 'Ember Queen', session: 'Canter', distance: '800 m', surface: 'All-weather', load: 'Light', intensity: 42, trainer: 'Elena Cardoso', status: 'Scheduled' },
-  { id: 'ts-7', time: '07:15', date: '23 Sep', horseId: 'h-goldenharbor', horseName: 'Golden Harbor', session: 'Return-to-work trot', distance: '600 m', surface: 'All-weather', load: 'Recovery', intensity: 28, trainer: 'Tomas Reyes', status: 'Scheduled' },
+  {
+    id: 'ts-1',
+    time: '06:30',
+    date: '20 Sep',
+    horseId: 'h-thunderbolt',
+    horseName: 'Thunder Bolt',
+    session: 'Gallop',
+    distance: '1,400 m',
+    surface: 'Turf',
+    load: 'Hard',
+    intensity: 78,
+    trainer: 'Elena Cardoso',
+    assignedGroom: 'Damilola Okafor',
+    status: 'In progress',
+  },
+  {
+    id: 'ts-2',
+    time: '07:15',
+    date: '20 Sep',
+    horseId: 'h-emberqueen',
+    horseName: 'Ember Queen',
+    session: 'Canter',
+    distance: '800 m',
+    surface: 'All-weather',
+    load: 'Light',
+    intensity: 42,
+    trainer: 'Elena Cardoso',
+    assignedGroom: 'Damilola Okafor',
+    status: 'Scheduled',
+  },
+  {
+    id: 'ts-3',
+    time: '08:00',
+    date: '20 Sep',
+    horseId: 'h-silvercomet',
+    horseName: 'Silver Comet',
+    session: 'Breeze',
+    distance: '1,000 m',
+    surface: 'All-weather',
+    load: 'Hard',
+    intensity: 82,
+    trainer: 'Tomas Reyes',
+    assignedGroom: 'Patrick Aziz',
+    status: 'Completed',
+    result: {
+      avgSpeed: 47.4,
+      maxSpeed: 51.8,
+      avgHr: 178,
+      maxHr: 214,
+      recoveryMin: 11,
+      durationMin: 18,
+      rating: 5,
+      assessment: 'Excellent',
+      notes: 'Strong closing sectional, relaxed through the bridle. Handled track transition smoothly.',
+    },
+  },
+  {
+    id: 'ts-4',
+    time: '08:45',
+    date: '20 Sep',
+    horseId: 'h-royalcadence',
+    horseName: 'Royal Cadence',
+    session: 'Gallop',
+    distance: '1,200 m',
+    surface: 'Turf',
+    load: 'Moderate',
+    intensity: 64,
+    trainer: 'Elena Cardoso',
+    assignedGroom: 'Luke Mbeki',
+    status: 'Scheduled',
+  },
+  {
+    id: 'ts-5',
+    time: '09:15',
+    date: '20 Sep',
+    horseId: 'h-shadowdancer',
+    horseName: 'Shadow Dancer',
+    session: 'Distance gallop',
+    distance: '1,600 m',
+    surface: 'Turf',
+    load: 'Moderate',
+    intensity: 60,
+    trainer: 'Elena Cardoso',
+    assignedGroom: 'Luke Mbeki',
+    status: 'Scheduled',
+  },
+  {
+    id: 'ts-6',
+    time: '08:00',
+    date: '20 Sep',
+    horseId: 'h-ironwill',
+    horseName: 'Iron Will',
+    session: 'Steady gallop',
+    distance: '2,000 m',
+    surface: 'Turf',
+    load: 'Moderate',
+    intensity: 58,
+    trainer: 'Tomas Reyes',
+    assignedGroom: 'Patrick Aziz',
+    status: 'Completed',
+    result: {
+      avgSpeed: 39.1,
+      maxSpeed: 44.0,
+      avgHr: 171,
+      maxHr: 199,
+      recoveryMin: 19,
+      durationMin: 25,
+      rating: 3,
+      assessment: 'Below target',
+      notes: 'Recovery HR slower than baseline — flagged for telemetry review.',
+    },
+  },
+  {
+    id: 'ts-7',
+    time: '07:15',
+    date: '23 Sep',
+    horseId: 'h-goldenharbor',
+    horseName: 'Golden Harbor',
+    session: 'Return-to-work trot',
+    distance: '600 m',
+    surface: 'All-weather',
+    load: 'Recovery',
+    intensity: 28,
+    trainer: 'Tomas Reyes',
+    assignedGroom: 'Luke Mbeki',
+    status: 'Scheduled',
+  },
 ];
 
 export interface ReadinessRow {
@@ -231,6 +354,7 @@ export function generateWorkoutsFromCourse(
   horseId: string,
   horseName: string,
   trainer: string,
+  assignedGroom?: string,
 ): { phases: TrainingPhase[]; allSessions: TrainingSession[] } {
   const chosenDays = daysOfWeek
     .map((d) => DAY_INDICES[d])
@@ -268,6 +392,7 @@ export function generateWorkoutsFromCourse(
         load: subject.load,
         intensity: subject.intensity,
         trainer,
+        assignedGroom,
         status: subjectIdx === 0 ? 'Scheduled' : 'Scheduled',
       };
 

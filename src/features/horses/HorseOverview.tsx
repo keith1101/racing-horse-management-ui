@@ -32,12 +32,35 @@ export function HorseOverview({ horse }: { horse: Horse }) {
             <Field label="Dam" value={horse.dam} />
             <Field label="Owner" value={horse.owner} />
             <Field label="Trainer" value={horse.trainer} />
-            <Field label="Stable" value={horse.stable} />
-            <Field label="Stall" value={horse.stall} />
+            <Field label="Stall Location" value={`${horse.stable} · Stall ${horse.stall}`} />
+            <Field label="Assigned Groom" value={horse.assignedGroom ?? 'Unassigned'} />
           </dl>
         </Panel>
 
         <div className="space-y-4">
+          {/* Approved Feed Ration - Critical for Groom & Care Staff */}
+          <Panel padded className="border-l-4 border-l-[var(--color-primary)]">
+            <div className="flex items-center justify-between">
+              <SectionTitle>Approved Feed Ration</SectionTitle>
+              <span className="rounded bg-[var(--color-success-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-success)]">
+                Nutrition Approved
+              </span>
+            </div>
+            <p className="mt-2 text-[13px] font-medium leading-relaxed text-[var(--color-text-primary)]">
+              {horse.approvedFeedRation || '4.0 kg/day Performance grain mix, timothy hay twice daily & electrolyte supplements'}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[var(--color-border)] pt-2.5 text-[11px] text-[var(--color-text-muted)]">
+              <span className="flex items-center gap-1">
+                <Icon name="clock" size={12} className="text-[var(--color-primary)]" />
+                Times: 05:30 (Morning) · 11:30 (Midday) · 16:30 (Evening)
+              </span>
+              <span className="flex items-center gap-1">
+                <Icon name="user" size={12} className="text-[var(--color-text-secondary)]" />
+                Groom: <strong>{horse.assignedGroom ?? 'Unassigned'}</strong>
+              </span>
+            </div>
+          </Panel>
+
           <Panel padded>
             <div className="flex items-center justify-between">
               <SectionTitle>Current health</SectionTitle>

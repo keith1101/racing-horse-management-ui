@@ -58,7 +58,7 @@ export function HorseDetailPanel({ horse, loading, onBack }: HorseDetailPanelPro
       )}
       <HorseHeader
         horse={horse}
-        onTrainingPlan={can('module.training.view') ? () => navigate('training', { view: 'plan', horseId: horse.id }) : undefined}
+        onTrainingPlan={can('training.manage') ? () => navigate('training', { view: 'plan', horseId: horse.id }) : undefined}
         onViewRestriction={can('module.veterinary.view') ? () => navigate('veterinary', { view: 'restrictions', horseId: horse.id }) : undefined}
       />
       <HorseTabs active={activeTab} tabs={visibleTabs} onChange={setTab} />

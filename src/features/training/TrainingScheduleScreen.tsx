@@ -9,6 +9,7 @@ import { EmptyState } from '../../components/states';
 import { HorseAvatar } from '../horses/HorseAvatar';
 import { useRtms } from '../../app/RtmsContext';
 import { TODAY_SESSIONS, type TrainingSession } from './trainingData';
+import { LogWorkoutModal } from './LogWorkoutModal';
 
 const statusTone: Record<TrainingSession['status'], 'success' | 'warning' | 'primary' | 'neutral'> = {
   Completed: 'success',
@@ -33,11 +34,12 @@ function uniq(values: string[]): { value: string; label: string }[] {
 
 export function TrainingScheduleScreen() {
   const { horses, navigate, toast, isLocked, can } = useRtms();
-  const canLog = can('training.log');
+  const canLog = can('training.log') || can('training.manage');
   const [trainer, setTrainer] = useState('');
   const [status, setStatus] = useState('');
   const [span, setSpan] = useState<'Day' | 'Week'>('Week');
   const [overrides, setOverrides] = useState<Record<string, TrainingSession['status']>>({});
+  const [loggingSession, setLoggingSession] = useState<TrainingSession | undefined>();
 
   const trainerOptions = useMemo(() => uniq(TODAY_SESSIONS.map((s) => s.trainer)), []);
 
@@ -171,7 +173,9 @@ export function TrainingScheduleScreen() {
                             <Pill tone={statusTone[sessionStatus]} size="sm">{sessionStatus}</Pill>
                           </div>
                           <div className="mt-1.5 truncate text-[12px] font-semibold text-[var(--color-text-primary)]">{session.horseName}</div>
-                          <div className="mt-0.5 line-clamp-2 text-[10px] leading-relaxed text-[var(--color-text-muted)]">{session.session} · {session.distance}</div>
+                          <div className="mt-0.5 line-clamp-2 text-[10px] leading-relaxed text-[var(--color-text-muted)]">
+                            {session.session} · {session.distance} · Groom: {session.assignedGroom ?? 'Damilola'}
+                          </div>
                           {locked && <div className="mt-1 flex items-center gap-1 text-[10px] text-[var(--color-danger)]"><Icon name="lock" size={10} /> Restricted</div>}
                         </button>
                       );
@@ -212,7 +216,7 @@ export function TrainingScheduleScreen() {
                             {locked && <Icon name="lock" size={11} className="text-[var(--color-danger)]" />}
                           </span>
                           <span className="block truncate text-[11px] text-[var(--color-text-muted)]">
-                            {s.session} · {s.distance} · {s.trainer}
+                            {s.session} · {s.distance} · {s.trainer} · <strong className="text-[var(--color-primary)]">Groom: {s.assignedGroom ?? 'Damilola Okafor'}</strong>
                           </span>
                         </span>
                       </button>
@@ -220,6 +224,14 @@ export function TrainingScheduleScreen() {
                       {canLog && <div className="flex items-center gap-1.5">
                         <Button
                           variant="secondary"
+                          size="sm"
+                          icon="activity"
+                          onClick={() => setLoggingSession(s)}
+                        >
+                          Log Result
+                        </Button>
+                        <Button
+                          variant="tertiary"
                           size="sm"
                           icon="check"
                           disabled={st === 'Completed'}
@@ -253,6 +265,7 @@ export function TrainingScheduleScreen() {
           ))}
         </div>
       )}
+      <LogWorkoutModal open={!!loggingSession} onClose={() => setLoggingSession(undefined)} session={loggingSession} />
     </Screen>
   );
 }

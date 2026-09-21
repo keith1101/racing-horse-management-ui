@@ -3,20 +3,21 @@ import { Screen } from '../../components/Screen';
 import { Button } from '../../components/Button';
 import { MetricCard } from '../../components/MetricCard';
 import { Panel, SectionTitle } from '../../components/Panel';
-import { ScheduleItem } from '../../components/ScheduleItem';
 import { ProgressBar } from '../../components/ProgressBar';
 import { DataTable, type Column } from '../../components/DataTable';
 import { HorseAvatar } from '../horses/HorseAvatar';
 import { Icon } from '../../components/Icon';
 import { Pill, TrainingBadge } from '../../components/StatusBadge';
 import { useRtms } from '../../app/RtmsContext';
-import { TODAY_SESSIONS, type TrainingSession } from './trainingData';
+import { type TrainingSession } from './trainingData';
 import { TrainingPlanScreen } from './TrainingPlanScreen';
 import { TrainingPlansList } from './TrainingPlansList';
 import { TrainingSessionDetail } from './TrainingSessionDetail';
 import { TrainingScheduleScreen } from './TrainingScheduleScreen';
 import { CreateTrainingPlanModal } from './CreateTrainingPlanModal';
 import { CourseCatalogDrawer } from './CourseCatalogDrawer';
+import { LogWorkoutModal } from './LogWorkoutModal';
+import { StallAssignmentModal } from '../horses/StallAssignmentModal';
 
 const statusTone: Record<TrainingSession['status'], 'success' | 'warning' | 'primary' | 'neutral'> = {
   Completed: 'success',
@@ -35,11 +36,15 @@ export function TrainingScreen() {
 }
 
 function TrainingDashboard() {
-  const { horses, navigate, isLocked, can, todaySessions, trainingPlanSummaries } = useRtms();
-  const [selectedSession, setSelectedSession] = useState<string | undefined>('ts-3');
+  const { horses, navigate, isLocked, can, todaySessions, trainingPlanSummaries, currentUser } = useRtms();
+  const [selectedSession, setSelectedSession] = useState<string | undefined>('ts-1');
   const [createPlanOpen, setCreatePlanOpen] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [logWorkoutSession, setLogWorkoutSession] = useState<TrainingSession | undefined>();
+  const [stallModalOpen, setStallModalOpen] = useState(false);
 
+  const canManageTraining = can('training.manage');
+  const canLogTraining = can('training.log') || canManageTraining;
 
   const readiness = useMemo(
     () =>
@@ -105,6 +110,7 @@ function TrainingDashboard() {
   return (
     <Screen
       title="Training"
+      context="Racetrack morning workouts (Khung Giờ Vàng: 06:30 - 09:30 AM)"
       secondary={
         <>
           <Button variant="secondary" icon="target" onClick={() => setCatalogOpen(true)}>
@@ -116,10 +122,15 @@ function TrainingDashboard() {
           <Button variant="secondary" icon="calendar" onClick={() => navigate('training', { view: 'schedule' })}>
             Schedule
           </Button>
+          {canManageTraining && (
+            <Button variant="secondary" icon="building" onClick={() => setStallModalOpen(true)}>
+              Stall & Groom
+            </Button>
+          )}
         </>
       }
       primary={
-        can('training.manage') ? (
+        canManageTraining ? (
           <Button variant="primary" icon="plus" onClick={() => setCreatePlanOpen(true)}>
             Create training plan
           </Button>
@@ -134,36 +145,107 @@ function TrainingDashboard() {
         <MetricCard label="Training-restricted" value={restricted} unit="horses" icon="lock" tone={restricted ? 'danger' : 'default'} />
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        {/* Today's Training Schedule (Golden Hour 06:30 - 09:30 AM) */}
         <Panel padded>
           <div className="mb-3 flex items-center justify-between">
-            <SectionTitle>Today's training schedule</SectionTitle>
-            <span className="font-metric text-[11px] text-[var(--color-text-muted)]">20 Sep 2026</span>
+            <div>
+              <SectionTitle>Today's training schedule</SectionTitle>
+              <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">
+                Khung Giờ Vàng: 06:30 – 09:30 AM · Click any session to log or view results
+              </p>
+            </div>
+            <span className="font-metric text-[11px] font-semibold text-[var(--color-primary)]">
+              20 Sep 2026
+            </span>
           </div>
-          <div className="space-y-1.5">
+
+          <div className="space-y-2">
             {todaySessions.filter((s) => s.date === '20 Sep' || s.date === '22 Sep').map((s) => {
+              const horse = horses.find((h) => h.id === s.horseId);
               const locked = isLocked(s.horseId);
+              const isSelected = selectedSession === s.id;
+              const hasResult = !!s.result;
+
               return (
-                <ScheduleItem
+                <div
                   key={s.id}
-                  time={s.time}
-                  tone="training"
-                  title={
-                    <span className="flex items-center gap-1.5">
-                      {s.horseName}
-                      {locked && <Icon name="lock" size={11} className="text-[var(--color-danger)]" />}
-                    </span>
-                  }
-                  meta={`${s.session} · ${s.distance} · ${s.surface} · ${s.trainer}`}
-                  selected={selectedSession === s.id}
                   onClick={() => setSelectedSession(s.id)}
-                  right={<Pill tone={statusTone[s.status]} size="sm">{s.status}</Pill>}
-                />
+                  className={
+                    'group flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border p-3 transition-all cursor-pointer ' +
+                    (isSelected
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)]/20 shadow-sm'
+                      : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-strong)]')
+                  }
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="font-metric w-12 shrink-0 text-[13px] font-bold text-[var(--color-text-primary)]">
+                      {s.time}
+                    </span>
+
+                    {horse && <HorseAvatar name={horse.name} image={horse.image} size={36} rounded="md" />}
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-[13px] font-bold text-[var(--color-text-primary)]">
+                          {s.horseName} – {s.distance} {s.session}
+                        </span>
+                        {locked && <Icon name="lock" size={11} className="text-[var(--color-danger)]" />}
+                        <Pill tone={statusTone[s.status]} size="sm">
+                          {s.status.toUpperCase()}
+                        </Pill>
+                      </div>
+
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[var(--color-text-muted)]">
+                        <span>
+                          Trainer: <strong className="text-[var(--color-text-secondary)]">{s.trainer}</strong>
+                        </span>
+                        <span className="text-[var(--color-border-strong)]">|</span>
+                        <span>
+                          Assigned Groom: <strong className="text-[var(--color-primary)]">{s.assignedGroom ?? 'Damilola Okafor'}</strong>
+                        </span>
+                        <span className="text-[var(--color-border-strong)]">|</span>
+                        <span>Track: {s.surface}</span>
+                      </div>
+
+                      {hasResult && s.result && (
+                        <div className="mt-1.5 flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)]">
+                          <span className="font-metric font-semibold text-[var(--color-success)]">
+                            Top: {s.result.maxSpeed} km/h (Avg: {s.result.avgSpeed} km/h)
+                          </span>
+                          <span>·</span>
+                          <span>HR: {s.result.avgHr} bpm</span>
+                          <span>·</span>
+                          <span className="text-amber-500">
+                            {'★'.repeat(s.result.rating ?? 5)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {canLogTraining && (
+                      <Button
+                        variant={hasResult ? 'tertiary' : 'secondary'}
+                        size="sm"
+                        icon="activity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLogWorkoutSession(s);
+                        }}
+                      >
+                        {hasResult ? 'View / Edit Result' : 'Log Workout Result'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
         </Panel>
 
+        {/* Horse Readiness */}
         <Panel padded>
           <div className="mb-3 flex items-center justify-between">
             <SectionTitle>Horse readiness</SectionTitle>
@@ -212,8 +294,12 @@ function TrainingDashboard() {
         </div>
       </Panel>
 
+      {/* Modals */}
       <CreateTrainingPlanModal open={createPlanOpen} onClose={() => setCreatePlanOpen(false)} />
       <CourseCatalogDrawer open={catalogOpen} onClose={() => setCatalogOpen(false)} onSelectCourse={() => setCreatePlanOpen(true)} />
+      <LogWorkoutModal open={!!logWorkoutSession} onClose={() => setLogWorkoutSession(undefined)} session={logWorkoutSession} />
+      <StallAssignmentModal open={stallModalOpen} onClose={() => setStallModalOpen(false)} />
     </Screen>
   );
 }
+

@@ -12,6 +12,7 @@ import { HorseMasterList } from './HorseMasterList';
 import { HorseDetailPanel } from './HorseDetailPanel';
 import { HorseTable } from './HorseTable';
 import { RegisterHorseScreen } from './RegisterHorseScreen';
+import { StallAssignmentModal } from './StallAssignmentModal';
 import { STABLES, TRAINERS, OWNERS, type Horse } from './horseData';
 
 type ViewMode = 'split' | 'table';
@@ -23,7 +24,26 @@ export function HorseManagementScreen() {
 }
 
 function HorseManagementListScreen() {
-  const { route, navigate, horses: HORSES, can } = useRtms();
+  const { route, navigate, horses: HORSES, can, currentUser } = useRtms();
+
+  // Groom filtering state
+  const isGroom = currentUser.role === 'GROOM';
+  const [groomScope, setGroomScope] = useState<'my' | 'all'>(isGroom ? 'my' : 'all');
+  const [stallModalOpen, setStallModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (currentUser.role === 'GROOM') {
+      setGroomScope('my');
+    } else {
+      setGroomScope('all');
+    }
+  }, [currentUser.role]);
+
+  const myAssignedHorses = useMemo(() => {
+    return HORSES.filter(
+      (h) => (h.assignedGroom ?? '').trim().toLowerCase() === currentUser.name.trim().toLowerCase()
+    );
+  }, [HORSES, currentUser.name]);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -56,23 +76,27 @@ function HorseManagementListScreen() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return HORSES.filter((h) => {
+    const baseList = isGroom && groomScope === 'my' ? myAssignedHorses : HORSES;
+    return baseList.filter((h) => {
       if (healthFilter !== 'ALL' && h.health !== healthFilter) return false;
       if (stable && h.stable !== stable) return false;
       if (trainer && h.trainer !== trainer) return false;
       if (owner && h.owner !== owner) return false;
       if (q) {
-        const hay = `${h.name} ${h.owner} ${h.microchip} ${h.sire} ${h.dam}`.toLowerCase();
+        const hay = `${h.name} ${h.owner} ${h.microchip} ${h.sire} ${h.dam} ${h.stall} ${h.assignedGroom ?? ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [HORSES, search, healthFilter, stable, trainer, owner]);
+  }, [HORSES, myAssignedHorses, isGroom, groomScope, search, healthFilter, stable, trainer, owner]);
 
-  const selectedHorse: Horse | undefined = useMemo(
-    () => filtered.find((h) => h.id === selectedId) ?? filtered[0],
-    [filtered, selectedId],
-  );
+  const selectedHorse: Horse | undefined = useMemo(() => {
+    if (selectedId) {
+      const match = filtered.find((h) => h.id === selectedId);
+      if (match) return match;
+    }
+    return filtered[0];
+  }, [filtered, selectedId]);
 
   const hasActiveFilters =
     !!search || healthFilter !== 'ALL' || !!stable || !!trainer || !!owner;
@@ -95,12 +119,58 @@ function HorseManagementListScreen() {
       <PageHeader
         title="Horses"
         context={
-          <>
-            {HORSES.length} active horses · Riverside Training Club
-          </>
+          <div className="flex items-center gap-2">
+            <span>
+              {isGroom && groomScope === 'my'
+                ? `${filtered.length} of ${myAssignedHorses.length} assigned horses`
+                : `${filtered.length} of ${HORSES.length} active horses`} · Riverside Training Club
+            </span>
+            {isGroom && (
+              <span className="hidden sm:inline-flex items-center rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-primary)]">
+                Assigned Groom: {currentUser.name}
+              </span>
+            )}
+          </div>
         }
         secondary={
           <div className="flex items-center gap-2">
+            {isGroom && (
+              <div className="inline-flex rounded-[var(--radius-sm)] border border-[var(--color-border)] p-0.5 bg-[var(--color-surface-muted)] text-xs">
+                <button
+                  type="button"
+                  onClick={() => setGroomScope('my')}
+                  className={`px-2.5 py-1 font-medium rounded transition-colors ${
+                    groomScope === 'my'
+                      ? 'bg-[var(--color-surface)] text-[var(--color-primary)] font-semibold shadow-xs'
+                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+                  }`}
+                >
+                  My Horses ({myAssignedHorses.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGroomScope('all')}
+                  className={`px-2.5 py-1 font-medium rounded transition-colors ${
+                    groomScope === 'all'
+                      ? 'bg-[var(--color-surface)] text-[var(--color-primary)] font-semibold shadow-xs'
+                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+                  }`}
+                >
+                  All Horses ({HORSES.length})
+                </button>
+              </div>
+            )}
+
+            {can('training.manage') && (
+              <Button
+                variant="secondary"
+                icon="building"
+                onClick={() => setStallModalOpen(true)}
+              >
+                Stall & Groom
+              </Button>
+            )}
+
             <div className="hidden items-center rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] p-0.5 sm:flex">
               <IconButton
                 icon="list"
@@ -142,7 +212,7 @@ function HorseManagementListScreen() {
             >
               <HorseMasterList
                 horses={filtered}
-                totalCount={HORSES.length}
+                totalCount={isGroom && groomScope === 'my' ? myAssignedHorses.length : HORSES.length}
                 search={search}
                 onSearch={setSearch}
                 healthFilter={healthFilter}
@@ -152,6 +222,10 @@ function HorseManagementListScreen() {
                 loading={loading}
                 onClear={clearFilters}
                 hasActiveFilters={hasActiveFilters}
+                isGroom={isGroom}
+                groomScope={groomScope}
+                onGroomScopeChange={setGroomScope}
+                myCount={myAssignedHorses.length}
               />
             </aside>
 
@@ -183,7 +257,11 @@ function HorseManagementListScreen() {
               hasActiveFilters={hasActiveFilters}
               onClear={clearFilters}
               count={filtered.length}
-              total={HORSES.length}
+              total={isGroom && groomScope === 'my' ? myAssignedHorses.length : HORSES.length}
+              isGroom={isGroom}
+              groomScope={groomScope}
+              onGroomScopeChange={setGroomScope}
+              myCount={myAssignedHorses.length}
             />
             <HorseTable
               horses={filtered}
@@ -209,6 +287,10 @@ function HorseManagementListScreen() {
           </div>
         )}
       </div>
+
+      {can('training.manage') && (
+        <StallAssignmentModal open={stallModalOpen} onClose={() => setStallModalOpen(false)} />
+      )}
     </AppShell>
   );
 }
@@ -226,6 +308,10 @@ function TableFilterBar({
   onClear,
   count,
   total,
+  isGroom,
+  groomScope,
+  onGroomScopeChange,
+  myCount,
 }: {
   search: string;
   onSearch: (v: string) => void;
@@ -239,9 +325,39 @@ function TableFilterBar({
   onClear: () => void;
   count: number;
   total: number;
+  isGroom?: boolean;
+  groomScope?: 'my' | 'all';
+  onGroomScopeChange?: (s: 'my' | 'all') => void;
+  myCount?: number;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {isGroom && onGroomScopeChange && (
+        <div className="inline-flex rounded-[var(--radius-sm)] border border-[var(--color-border)] p-0.5 bg-[var(--color-surface-muted)] text-xs">
+          <button
+            type="button"
+            onClick={() => onGroomScopeChange('my')}
+            className={`px-2.5 py-1 font-medium rounded transition-colors ${
+              groomScope === 'my'
+                ? 'bg-[var(--color-surface)] text-[var(--color-primary)] font-semibold shadow-xs'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+            }`}
+          >
+            My Horses ({myCount ?? 0})
+          </button>
+          <button
+            type="button"
+            onClick={() => onGroomScopeChange('all')}
+            className={`px-2.5 py-1 font-medium rounded transition-colors ${
+              groomScope === 'all'
+                ? 'bg-[var(--color-surface)] text-[var(--color-primary)] font-semibold shadow-xs'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+            }`}
+          >
+            All Horses ({total})
+          </button>
+        </div>
+      )}
       <div className="w-full max-w-xs">
         <SearchWrap value={search} onChange={onSearch} />
       </div>

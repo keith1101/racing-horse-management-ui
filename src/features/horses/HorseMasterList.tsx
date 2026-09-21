@@ -17,6 +17,10 @@ interface HorseMasterListProps {
   loading?: boolean;
   onClear: () => void;
   hasActiveFilters: boolean;
+  isGroom?: boolean;
+  groomScope?: 'my' | 'all';
+  onGroomScopeChange?: (v: 'my' | 'all') => void;
+  myCount?: number;
 }
 
 export function HorseMasterList({
@@ -31,11 +35,41 @@ export function HorseMasterList({
   loading = false,
   onClear,
   hasActiveFilters,
+  isGroom,
+  groomScope = 'all',
+  onGroomScopeChange,
+  myCount,
 }: HorseMasterListProps) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* Sticky search + quick health filter */}
       <div className="shrink-0 space-y-2 border-b border-[var(--color-border)] p-2.5">
+        {isGroom && onGroomScopeChange && (
+          <div className="grid grid-cols-2 gap-1 p-0.5 bg-[var(--color-surface-muted)] rounded-[var(--radius-sm)] border border-[var(--color-border)] text-xs">
+            <button
+              type="button"
+              onClick={() => onGroomScopeChange('my')}
+              className={`py-1 text-center font-medium rounded transition-colors ${
+                groomScope === 'my'
+                  ? 'bg-[var(--color-surface)] text-[var(--color-primary)] font-semibold shadow-xs'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+              }`}
+            >
+              My Assigned ({myCount ?? 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => onGroomScopeChange('all')}
+              className={`py-1 text-center font-medium rounded transition-colors ${
+                groomScope === 'all'
+                  ? 'bg-[var(--color-surface)] text-[var(--color-primary)] font-semibold shadow-xs'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+              }`}
+            >
+              All Horses ({totalCount})
+            </button>
+          </div>
+        )}
         <SearchInput
           value={search}
           onChange={onSearch}

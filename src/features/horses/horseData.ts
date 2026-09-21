@@ -34,6 +34,8 @@ export interface Horse {
   healthNote: string;
   stable: string;
   stall: string;
+  assignedGroom?: string;
+  approvedFeedRation?: string;
   owner: string;
   trainer: string;
   training: TrainingStatus;
@@ -97,6 +99,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Cleared at last examination',
     stable: 'Barn A',
     stall: 'A03',
+    assignedGroom: 'Damilola Okafor',
+    approvedFeedRation: '4.5 kg/day Performance Mix (oats, barley, sweet feed) + 8 kg timothy hay & electrolytes',
     owner: 'Marlowe Racing Ltd.',
     trainer: 'Elena Cardoso',
     training: 'ACTIVE',
@@ -132,6 +136,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Mild fetlock swelling — under observation',
     stable: 'Barn A',
     stall: 'A07',
+    assignedGroom: 'Patrick Aziz',
+    approvedFeedRation: '3.8 kg/day Conditioning Pellet + 7 kg meadow hay',
     owner: 'Ashgrove Stud',
     trainer: 'Elena Cardoso',
     training: 'SCHEDULED',
@@ -165,6 +171,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Tendon inflammation — left front',
     stable: 'Barn B',
     stall: 'B02',
+    assignedGroom: 'Patrick Aziz',
+    approvedFeedRation: '3.5 kg/day Low-starch anti-inflammatory mash + soaked beet pulp & timothy hay',
     owner: 'Hollowbrook Partners',
     trainer: 'Tomas Reyes',
     training: 'BLOCKED',
@@ -204,6 +212,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Cleared at last examination',
     stable: 'Barn B',
     stall: 'B05',
+    assignedGroom: 'Patrick Aziz',
+    approvedFeedRation: '4.8 kg/day Sprint Energy Mix + alfalfa flakes & hydration booster',
     owner: 'Marlowe Racing Ltd.',
     trainer: 'Tomas Reyes',
     training: 'ACTIVE',
@@ -237,6 +247,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Cleared at last examination',
     stable: 'Barn A',
     stall: 'A01',
+    assignedGroom: 'Damilola Okafor',
+    approvedFeedRation: '3.8 kg/day Juvenile Growth Formula + lucerne chaff & calcium booster',
     owner: 'Ashgrove Stud',
     trainer: 'Elena Cardoso',
     training: 'ACTIVE',
@@ -270,6 +282,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Respiratory quarantine — 5 days remaining',
     stable: 'Isolation',
     stall: 'IS1',
+    assignedGroom: 'Damilola Okafor',
+    approvedFeedRation: '3.2 kg/day Respiratory Support Mash + steamed timothy hay',
     owner: 'Crescent Bloodstock',
     trainer: 'Tomas Reyes',
     training: 'CANCELLED',
@@ -303,6 +317,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Cleared at last examination',
     stable: 'Barn C',
     stall: 'C04',
+    assignedGroom: 'Luke Mbeki',
+    approvedFeedRation: '4.6 kg/day Classic Mile Grain Mix + flaxseed oil & orchard grass',
     owner: 'Hollowbrook Partners',
     trainer: 'Elena Cardoso',
     training: 'ACTIVE',
@@ -335,6 +351,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Recovering from mild colic episode',
     stable: 'Barn C',
     stall: 'C08',
+    assignedGroom: 'Luke Mbeki',
+    approvedFeedRation: '3.2 kg/day Post-Colic Digestive Mash + probiotic gut balancer & soaked hay',
     owner: 'Crescent Bloodstock',
     trainer: 'Tomas Reyes',
     training: 'SCHEDULED',
@@ -368,6 +386,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Cleared at last examination',
     stable: 'Barn A',
     stall: 'A11',
+    assignedGroom: 'Damilola Okafor',
+    approvedFeedRation: '5.0 kg/day High-Energy Race Ration + amino acid supplement & meadow hay',
     owner: 'Marlowe Racing Ltd.',
     trainer: 'Elena Cardoso',
     training: 'COMPLETED',
@@ -401,6 +421,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Cleared at last examination',
     stable: 'Barn B',
     stall: 'B09',
+    assignedGroom: 'Patrick Aziz',
+    approvedFeedRation: '3.6 kg/day Maiden Intake Formula + pasture turnout ration',
     owner: 'Ashgrove Stud',
     trainer: 'Tomas Reyes',
     training: 'DRAFT',
@@ -432,6 +454,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Cleared at last examination',
     stable: 'Barn C',
     stall: 'C02',
+    assignedGroom: 'Luke Mbeki',
+    approvedFeedRation: '4.4 kg/day Distance Endurance Ration + vitamin E & timothy hay',
     owner: 'Hollowbrook Partners',
     trainer: 'Elena Cardoso',
     training: 'ACTIVE',
@@ -464,6 +488,8 @@ export const HORSES: Horse[] = [
     healthNote: 'Elevated resting heart rate — under watch',
     stable: 'Barn B',
     stall: 'B12',
+    assignedGroom: 'Luke Mbeki',
+    approvedFeedRation: '4.2 kg/day Low-glycemic stamina mix + heart telemetry supplements',
     owner: 'Crescent Bloodstock',
     trainer: 'Tomas Reyes',
     training: 'ACTIVE',
@@ -483,6 +509,9 @@ export const HORSES: Horse[] = [
     ],
   },
 ];
+
+export const GROOMS = ['Damilola Okafor', 'Patrick Aziz', 'Luke Mbeki'];
+export const MAX_STALLS_PER_GROOM = 3;
 
 export const STABLES = ['Barn A', 'Barn B', 'Barn C', 'Isolation'];
 export const TRAINERS = ['Elena Cardoso', 'Tomas Reyes'];
