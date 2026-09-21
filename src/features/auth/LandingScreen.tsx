@@ -401,11 +401,7 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
       <section id="admission-flow" className="border-b border-[var(--color-border)] bg-[var(--color-surface)] py-16 lg:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-1 text-[11px] font-semibold text-[var(--color-text-secondary)] uppercase">
-              <Icon name="git-branch" size={13} />
-              <span>Core Business Flow · SWP391</span>
-            </span>
-            <h2 className="mt-3 text-[28px] font-bold tracking-tight text-[var(--color-text-primary)] sm:text-[36px]">
+            <h2 className="text-[28px] font-bold tracking-tight text-[var(--color-text-primary)] sm:text-[36px]">
               Closed-Loop Admission &amp; Intake Pipeline
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--color-text-secondary)]">

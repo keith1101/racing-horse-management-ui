@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { Panel, SectionTitle, FieldLabel } from '../../components/Panel';
 import { Icon, type IconName } from '../../components/Icon';
 import { HealthBadge } from '../../components/StatusBadge';
-import type { Horse, ScheduleEntry } from './horseData';
+import { useRtms } from '../../app/RtmsContext';
+import { GROOMS, MAX_STALLS_PER_GROOM, type Horse, type ScheduleEntry } from './horseData';
 
 function formatFoaled(iso: string) {
   const d = new Date(iso);
@@ -17,6 +19,23 @@ const scheduleAccent: Record<ScheduleEntry['type'], string> = {
 };
 
 export function HorseOverview({ horse }: { horse: Horse }) {
+  const { can, stallAssignments, assignGroomToStall, toast } = useRtms();
+  const canManageTraining = can('training.manage');
+  const currentAssignedGroom = stallAssignments[horse.stall] ?? horse.assignedGroom ?? '';
+
+  const groomWorkloads = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const groom of GROOMS) {
+      counts[groom] = 0;
+    }
+    for (const groom of Object.values(stallAssignments)) {
+      if (groom && counts[groom] !== undefined) {
+        counts[groom] = (counts[groom] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [stallAssignments]);
+
   return (
     <div className="space-y-4">
       {/* Row 1: Basic info + current health */}
@@ -33,7 +52,44 @@ export function HorseOverview({ horse }: { horse: Horse }) {
             <Field label="Owner" value={horse.owner} />
             <Field label="Trainer" value={horse.trainer} />
             <Field label="Stall Location" value={`${horse.stable} · Stall ${horse.stall}`} />
-            <Field label="Assigned Groom" value={horse.assignedGroom ?? 'Unassigned'} />
+            <div>
+              <dt className="text-[11px] font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">
+                Assigned Groom
+              </dt>
+              <dd className="mt-1">
+                {canManageTraining ? (
+                  <select
+                    value={currentAssignedGroom}
+                    onChange={(e) => {
+                      const newGroom = e.target.value;
+                      const res = assignGroomToStall(horse.stall, newGroom);
+                      if (!res.success) {
+                        toast(res.message, 'error');
+                      } else {
+                        toast(`Assigned ${newGroom || 'nobody'} to Stall ${horse.stall} (${horse.name})`, 'success');
+                      }
+                    }}
+                    className="h-7 w-full max-w-[170px] rounded-[var(--radius-xs)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2 text-[12px] font-medium text-[var(--color-text-primary)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
+                  >
+                    <option value="">Unassigned</option>
+                    {GROOMS.map((g) => {
+                      const count = groomWorkloads[g] || 0;
+                      const isCurrent = g === currentAssignedGroom;
+                      const isFull = count >= MAX_STALLS_PER_GROOM && !isCurrent;
+                      return (
+                        <option key={g} value={g} disabled={isFull}>
+                          {g} ({count}/{MAX_STALLS_PER_GROOM}{isFull ? ' - Full' : ''})
+                        </option>
+                      );
+                    })}
+                  </select>
+                ) : (
+                  <span className="text-[13px] font-medium text-[var(--color-text-primary)]">
+                    {currentAssignedGroom || 'Unassigned'}
+                  </span>
+                )}
+              </dd>
+            </div>
           </dl>
         </Panel>
 
@@ -56,7 +112,7 @@ export function HorseOverview({ horse }: { horse: Horse }) {
               </span>
               <span className="flex items-center gap-1">
                 <Icon name="user" size={12} className="text-[var(--color-text-secondary)]" />
-                Groom: <strong>{horse.assignedGroom ?? 'Unassigned'}</strong>
+                Groom: <strong>{currentAssignedGroom || 'Unassigned'}</strong>
               </span>
             </div>
           </Panel>
