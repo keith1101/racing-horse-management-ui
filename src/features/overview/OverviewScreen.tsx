@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Screen } from '../../components/Screen';
 import { Button } from '../../components/Button';
 import { MetricCard } from '../../components/MetricCard';
@@ -17,7 +18,19 @@ const ROLE_OVERVIEW: Record<ReturnType<typeof useRtms>['currentUser']['role'], {
 };
 
 export function OverviewScreen() {
-  const { horses, issues, navigate, isLocked, can, currentUser, candidates, raceProposals } = useRtms();
+  const {
+    horses,
+    issues,
+    navigate,
+    isLocked,
+    getLock,
+    can,
+    currentUser,
+    candidates,
+    raceProposals,
+    getCandidateStatus,
+    getMedicalRecord,
+  } = useRtms();
   const persona = ROLE_OVERVIEW[currentUser.role];
   const horseIds = new Set(horses.map((horse) => horse.id));
   const visibleSessions = TODAY_SESSIONS.filter((session) => horseIds.has(session.horseId));
@@ -29,16 +42,62 @@ export function OverviewScreen() {
   const restricted = horses.filter((h) => isLocked(h.id));
   const openIssues = issues.filter((i) => i.status !== 'Resolved');
   const attention = horses.filter((h) => h.health === 'INJURED' || h.health === 'ISOLATED' || isLocked(h.id));
+  const activeTreatmentsCount = horses.filter((h) => getMedicalRecord(h.id).treatment?.status === 'Active').length;
+  const pendingVetCandidates = candidates.filter((c) => (getCandidateStatus ? getCandidateStatus(c) : c.evaluation) === 'VET_REVIEW').length;
+
+  const treatmentTasks = useMemo(() => {
+    const tasks: Array<{
+      id: string;
+      horseId: string;
+      horseName: string;
+      time: string;
+      task: string;
+      by: string;
+      done: boolean;
+    }> = [];
+    horses.forEach((h) => {
+      const record = getMedicalRecord(h.id);
+      if (record.treatment && record.treatment.status === 'Active') {
+        record.treatment.schedule.forEach((task) => {
+          tasks.push({
+            id: task.id,
+            horseId: h.id,
+            horseName: h.name,
+            time: task.time,
+            task: task.task,
+            by: task.by,
+            done: task.done,
+          });
+        });
+      }
+    });
+    return tasks;
+  }, [horses, getMedicalRecord]);
+
+  const vetCandidates = useMemo(() => {
+    return candidates.filter((c) => (getCandidateStatus ? getCandidateStatus(c) : c.evaluation) === 'VET_REVIEW');
+  }, [candidates, getCandidateStatus]);
 
   return (
     <Screen
       title={persona.title}
       context={persona.context}
-      primary={can('horse.create') ? (
-        <Button variant="primary" icon="plus" onClick={() => navigate('horses', { view: 'register' })}>
-          Register horse
-        </Button>
-      ) : undefined}
+      primary={
+        currentUser.role === 'VETERINARIAN' ? (
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" icon="clipboard" onClick={() => navigate('veterinary', { view: 'schedule' })}>
+              Treatment schedule
+            </Button>
+            <Button variant="primary" icon="plus" onClick={() => navigate('veterinary')}>
+              New examination
+            </Button>
+          </div>
+        ) : can('horse.create') ? (
+          <Button variant="primary" icon="plus" onClick={() => navigate('horses', { view: 'register' })}>
+            Register horse
+          </Button>
+        ) : undefined
+      }
     >
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <MetricCard label="Horses in care" value={horses.length} unit="total" icon="list" onClick={() => navigate('horses')} />
@@ -48,6 +107,47 @@ export function OverviewScreen() {
         <MetricCard label="Isolated" value={count((h) => h.health === 'ISOLATED')} unit="horses" icon="shield" tone="info" />
         <MetricCard label="Training restricted" value={restricted.length} unit="locked" icon="lock" tone={restricted.length ? 'danger' : 'default'} onClick={() => navigate(canViewVetModule ? 'veterinary' : 'horses')} />
       </div>
+
+      {currentUser.role === 'VETERINARIAN' && (
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <MetricCard
+            label="Candidate Vet Checks"
+            value={pendingVetCandidates}
+            unit="pending"
+            icon="clipboard"
+            tone="warning"
+            hint="Awaiting clinical & soundness exam"
+            onClick={() => navigate('management')}
+          />
+          <MetricCard
+            label="Active Training Locks"
+            value={restricted.length}
+            unit="horses"
+            icon="lock"
+            tone={restricted.length ? 'danger' : 'default'}
+            hint="Enforced clinical training restrictions"
+            onClick={() => navigate('veterinary')}
+          />
+          <MetricCard
+            label="Active Treatments"
+            value={activeTreatmentsCount}
+            unit="plans"
+            icon="pill"
+            tone="info"
+            hint="Active medication & therapy regimens"
+            onClick={() => navigate('veterinary', { view: 'schedule' })}
+          />
+          <MetricCard
+            label="Groom Observations"
+            value={openIssues.length}
+            unit="reports"
+            icon="alert-triangle"
+            tone={openIssues.length ? 'warning' : 'default'}
+            hint="Incident reports requiring clinical triage"
+            onClick={() => navigate('veterinary')}
+          />
+        </div>
+      )}
 
       {currentUser.role === 'CLUB_MANAGER' && (
         <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -59,12 +159,13 @@ export function OverviewScreen() {
       )}
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
-        {/* Left: schedule + races */}
+        {/* Left column */}
         <div className="space-y-4">
+          {/* Head Trainer & Staff: Today's training schedule */}
           {canViewTrainingModule && <Panel padded>
             <div className="mb-3 flex items-center justify-between">
               <SectionTitle>Today's training schedule</SectionTitle>
-              {canViewTrainingModule && <button onClick={() => navigate('training')} className="text-[12px] font-medium text-[var(--color-primary)] hover:underline">View all</button>}
+              <button onClick={() => navigate('training')} className="text-[12px] font-medium text-[var(--color-primary)] hover:underline">View all</button>
             </div>
             <div className="space-y-1.5">
               {visibleSessions.slice(0, 5).map((s) => {
@@ -91,6 +192,138 @@ export function OverviewScreen() {
             </div>
           </Panel>}
 
+          {/* Veterinarian: Today's Clinical Treatment & Medication Schedule */}
+          {currentUser.role === 'VETERINARIAN' && (
+            <>
+              <Panel padded>
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Icon name="pill" size={14} className="text-[var(--color-primary)]" />
+                    <SectionTitle>Today's treatment schedule</SectionTitle>
+                  </div>
+                  <button
+                    onClick={() => navigate('veterinary', { view: 'schedule' })}
+                    className="text-[12px] font-medium text-[var(--color-primary)] hover:underline"
+                  >
+                    View all ({treatmentTasks.length})
+                  </button>
+                </div>
+                {treatmentTasks.length === 0 ? (
+                  <p className="py-4 text-center text-[13px] text-[var(--color-text-muted)]">
+                    No clinical treatments or medications scheduled today.
+                  </p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {treatmentTasks.slice(0, 5).map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => navigate('veterinary', { view: 'schedule' })}
+                        className="flex w-full items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-left outline-none transition-colors hover:border-[var(--color-border-strong)] focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
+                      >
+                        <span className="font-metric w-11 shrink-0 text-[12px] text-[var(--color-text-secondary)]">{t.time}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-[13px] font-medium text-[var(--color-text-primary)]">{t.horseName}</div>
+                          <div className="truncate text-[11px] text-[var(--color-text-muted)]">{t.task} · {t.by}</div>
+                        </div>
+                        <Pill tone={t.done ? 'success' : 'neutral'} size="sm">
+                          {t.done ? 'Done' : 'Pending'}
+                        </Pill>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </Panel>
+
+              {/* Candidate Admissions Awaiting Physical Examination */}
+              <Panel padded>
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Icon name="clipboard" size={14} className="text-[var(--color-warning)]" />
+                    <SectionTitle>Candidate physical exam queue</SectionTitle>
+                  </div>
+                  <span className="rounded-full bg-[var(--color-warning-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-warning)]">
+                    {vetCandidates.length} pending
+                  </span>
+                </div>
+                {vetCandidates.length === 0 ? (
+                  <p className="py-4 text-center text-[13px] text-[var(--color-text-muted)]">
+                    All candidate admission physical screenings cleared.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {vetCandidates.map((c) => (
+                      <div
+                        key={c.id}
+                        className="flex items-center justify-between rounded-[var(--radius-sm)] border border-[var(--color-border)] p-2.5"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <HorseAvatar name={c.name} image={c.image} size={32} />
+                          <div className="min-w-0">
+                            <div className="truncate text-[13px] font-medium text-[var(--color-text-primary)]">{c.name}</div>
+                            <div className="truncate text-[11px] text-[var(--color-text-muted)]">
+                              {c.ageYears}yo {c.sex} · Owner: {c.owner}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => navigate('management')}
+                          className="inline-flex shrink-0 items-center gap-1 rounded-[var(--radius-sm)] bg-[var(--color-primary)] px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs transition-colors hover:bg-[var(--color-primary-hover)]"
+                        >
+                          <span>Start exam</span>
+                          <Icon name="chevron-right" size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Panel>
+
+              {/* Active Clinical Training Restrictions */}
+              {restricted.length > 0 && (
+                <Panel padded>
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon name="lock" size={14} className="text-[var(--color-danger)]" />
+                      <SectionTitle>Active training locks enforced</SectionTitle>
+                    </div>
+                    <span className="rounded-full bg-[var(--color-danger-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-danger)]">
+                      {restricted.length} locked
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {restricted.map((h) => {
+                      const lock = getLock(h.id);
+                      return (
+                        <div
+                          key={h.id}
+                          className="flex items-center justify-between rounded-[var(--radius-sm)] border border-[var(--color-danger)]/25 bg-[var(--color-danger-soft)]/30 p-2.5"
+                        >
+                          <div className="min-w-0 flex-1 pr-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[13px] font-bold text-[var(--color-text-primary)]">{h.name}</span>
+                              <Pill tone="danger" size="sm" icon="lock">Restricted</Pill>
+                            </div>
+                            <p className="mt-0.5 text-[11px] text-[var(--color-danger)] truncate">
+                              {lock?.reason || h.healthNote || 'Clinical restriction active'}
+                            </p>
+                            <p className="text-[10px] text-[var(--color-text-muted)]">
+                              Next review: {lock?.reviewDate || 'Immediate'} · Attending: {lock?.veterinarian || 'Dr. Haines'}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => navigate('veterinary')}
+                            className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1 text-[11px] font-medium text-[var(--color-text-primary)] hover:border-[var(--color-border-strong)]"
+                          >
+                            Review lock
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Panel>
+              )}
+            </>
+          )}
         </div>
 
         {/* Right: attention + issues */}

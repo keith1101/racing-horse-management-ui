@@ -33,7 +33,7 @@ const ROLE_TABS: RoleTabInfo[] = [
     features: [
       'Standardized Course Catalog with automated calendar workout projections',
       'Enforced invariant: Strict single active training plan per thoroughbred',
-      'Real-time sectional speed, peak heart rate, and cardiovascular recovery tracking',
+      'Structured workout logging, pace targets, and post-session performance assessments',
       'Race entry proposals with requested budget allocation submitted to Club Manager',
     ],
     metricLabel: 'Curriculum target adherence',
@@ -271,15 +271,15 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <Icon name="activity" size={15} className="text-[var(--color-training)]" />
-                  <span>Sub-second Speed & HR Telemetry</span>
+                  <span>Course Curricula & Workout Projections</span>
                 </div>
               </div>
             </div>
 
-            {/* Right: Live Product Preview (Live Thoroughbred Telemetry Card) */}
+            {/* Right: Live Product Preview (Thoroughbred Operations & Stable Profile Card) */}
             <div className="lg:col-span-6">
               <div className="relative rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-xl shadow-black/5 sm:p-6">
-                {/* Simulated Terminal Header */}
+                {/* Operations Header */}
                 <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
                   <div className="flex items-center gap-2">
                     <span className="relative flex h-2.5 w-2.5">
@@ -287,11 +287,11 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
                       <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--color-success)]" />
                     </span>
                     <span className="font-metric text-[11px] font-medium tracking-wide text-[var(--color-text-secondary)] uppercase">
-                      RTC LIVE TELEMETRY · SENSOR BAND #SB-08
+                      OFFICIAL CLUB ROSTER · ACTIVE CONTENDER
                     </span>
                   </div>
-                  <span className="rounded-xs bg-[var(--color-surface-muted)] px-2 py-0.5 font-metric text-[10px] text-[var(--color-text-muted)]">
-                    TRACK A · TURF OVAL
+                  <span className="rounded-xs bg-[var(--color-surface-muted)] px-2 py-0.5 font-metric text-[10px] font-medium text-[var(--color-text-muted)]">
+                    BARN B · STALL 04
                   </span>
                 </div>
 
@@ -313,93 +313,68 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
                         </span>
                       </div>
                       <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">
-                        4yo Colt · Thoroughbred · Stall B-04 · Marlowe Racing Ltd.
+                        4yo Colt · Sire: Deep Impact · Dam: Starlight Express · Marlowe Racing Ltd.
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Telemetry Metric Grid */}
+                {/* Operational Data Grid */}
                 <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3">
                     <div className="flex items-center gap-1.5 text-[var(--color-text-muted)]">
                       <Icon name="gauge" size={13} className="text-[var(--color-training)]" />
-                      <span className="text-[10px] font-medium tracking-wide uppercase">Sprint Speed</span>
+                      <span className="text-[10px] font-medium tracking-wide uppercase">Weight</span>
                     </div>
                     <div className="mt-1 flex items-baseline gap-1">
-                      <span className="font-metric text-[22px] font-bold text-[var(--color-text-primary)]">51.8</span>
-                      <span className="text-[11px] text-[var(--color-text-secondary)]">km/h</span>
+                      <span className="font-metric text-[22px] font-bold text-[var(--color-text-primary)]">492</span>
+                      <span className="text-[11px] text-[var(--color-text-secondary)]">kg</span>
                     </div>
-                    <p className="mt-1 text-[10px] text-[var(--color-success)] font-medium">On breeze target</p>
+                    <p className="mt-1 text-[10px] text-[var(--color-success)] font-medium">Optimal racing trim</p>
                   </div>
 
                   <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3">
                     <div className="flex items-center gap-1.5 text-[var(--color-text-muted)]">
-                      <Icon name="heart-pulse" size={13} className="text-[var(--color-danger)]" />
-                      <span className="text-[10px] font-medium tracking-wide uppercase">Peak Heart Rate</span>
+                      <Icon name="flag" size={13} className="text-[var(--color-racing)]" />
+                      <span className="text-[10px] font-medium tracking-wide uppercase">Career Record</span>
                     </div>
                     <div className="mt-1 flex items-baseline gap-1">
-                      <span className="font-metric text-[22px] font-bold text-[var(--color-text-primary)]">178</span>
-                      <span className="text-[11px] text-[var(--color-text-secondary)]">bpm</span>
+                      <span className="font-metric text-[22px] font-bold text-[var(--color-text-primary)]">12</span>
+                      <span className="text-[11px] text-[var(--color-text-secondary)]">starts</span>
                     </div>
-                    <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">Target Zone 4</p>
+                    <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">5 wins · 3 places</p>
                   </div>
 
                   <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3">
                     <div className="flex items-center gap-1.5 text-[var(--color-text-muted)]">
-                      <Icon name="clock" size={13} className="text-[var(--color-info)]" />
-                      <span className="text-[10px] font-medium tracking-wide uppercase">HR Recovery</span>
+                      <Icon name="activity" size={13} className="text-[var(--color-info)]" />
+                      <span className="text-[10px] font-medium tracking-wide uppercase">Today's Session</span>
                     </div>
                     <div className="mt-1 flex items-baseline gap-1">
-                      <span className="font-metric text-[22px] font-bold text-[var(--color-text-primary)]">11</span>
-                      <span className="text-[11px] text-[var(--color-text-secondary)]">min</span>
+                      <span className="font-metric text-[22px] font-bold text-[var(--color-text-primary)]">06:00</span>
+                      <span className="text-[11px] text-[var(--color-text-secondary)]">breeze</span>
                     </div>
-                    <p className="mt-1 text-[10px] text-[var(--color-success)] font-medium">Optimal (&lt;15m)</p>
+                    <p className="mt-1 text-[10px] text-[var(--color-success)] font-medium">Completed · 1,000m</p>
                   </div>
 
                   <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3">
                     <div className="flex items-center gap-1.5 text-[var(--color-text-muted)]">
-                      <Icon name="target" size={13} className="text-[var(--color-primary)]" />
-                      <span className="text-[10px] font-medium tracking-wide uppercase">Distance</span>
+                      <Icon name="user" size={13} className="text-[var(--color-primary)]" />
+                      <span className="text-[10px] font-medium tracking-wide uppercase">Trainer</span>
                     </div>
                     <div className="mt-1 flex items-baseline gap-1">
-                      <span className="font-metric text-[22px] font-bold text-[var(--color-text-primary)]">1,000</span>
-                      <span className="text-[11px] text-[var(--color-text-secondary)]">m</span>
+                      <span className="text-[15px] font-bold text-[var(--color-text-primary)] truncate">E. Cardoso</span>
                     </div>
-                    <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">Firm turf surface</p>
+                    <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">Head Trainer</p>
                   </div>
                 </div>
 
-                {/* Simulated Heart Rate Waveform Curve */}
-                <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-medium text-[var(--color-text-secondary)]">
-                      Real-time sectional pace &amp; telemetry ECG
-                    </span>
-                    <span className="font-metric text-[10px] text-[var(--color-success)]">
-                      Rhythm stable · No arrhythmia
-                    </span>
-                  </div>
-                  <div className="mt-2 flex h-12 items-end gap-1 px-1">
-                    {[32, 38, 42, 45, 50, 58, 65, 78, 92, 98, 95, 84, 68, 52, 42, 36, 34].map((val, idx) => (
-                      <div
-                        key={idx}
-                        className="flex-1 rounded-t-xs transition-all duration-300"
-                        style={{
-                          height: `${val}%`,
-                          backgroundColor: val > 80 ? 'var(--color-primary)' : 'var(--color-border-strong)',
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Active Plan & Invariant Status */}
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary-soft)] px-3 py-2.5 text-[12px]">
+                {/* Active Curriculum & Training Plan */}
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary-soft)] px-3.5 py-2.5 text-[12px]">
                   <div className="flex items-center gap-2">
                     <Icon name="activity" size={15} className="text-[var(--color-primary)]" />
                     <span className="font-semibold text-[var(--color-text-primary)]">
-                      Active Curriculum: Sprint Campaign Preparation (Phase 3)
+                      Active Plan: Sprint Campaign Preparation (Week 4 of 6)
                     </span>
                   </div>
                   <span className="rounded-full bg-[var(--color-surface)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--color-primary)] shadow-xs">
@@ -407,11 +382,24 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
                   </span>
                 </div>
 
-                {/* Clinical Clearance Pill */}
+                {/* Upcoming Racing Nomination */}
+                <div className="mt-3 flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3.5 py-2.5 text-[12px]">
+                  <div className="flex items-center gap-2">
+                    <Icon name="flag" size={14} className="text-[var(--color-racing)]" />
+                    <span className="text-[var(--color-text-secondary)]">
+                      Next Target: <strong className="text-[var(--color-text-primary)]">Riverside Spring Classic</strong> (1,600m)
+                    </span>
+                  </div>
+                  <span className="font-metric text-[11px] font-medium text-[var(--color-text-muted)]">
+                    05 Oct 2026
+                  </span>
+                </div>
+
+                {/* Clinical & Biosecurity Clearance Banner */}
                 <div className="mt-3 flex items-center justify-between rounded-[var(--radius-sm)] border border-[var(--color-success)]/30 bg-[var(--color-success-soft)] px-3 py-2 text-[11px]">
                   <div className="flex items-center gap-2 text-[var(--color-success)]">
                     <Icon name="check" size={14} />
-                    <span className="font-medium">Clinical &amp; Biosecurity Clearance: PASS</span>
+                    <span className="font-medium">Clinical Clearance: SOUND · No active training lock</span>
                   </div>
                   <span className="text-[10px] text-[var(--color-text-muted)]">Attending: Dr. Amelia Haines</span>
                 </div>
