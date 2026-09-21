@@ -1,0 +1,10 @@
+{
+  "description": "Manage racehorse training and health with an intuitive platform for trainers, veterinarians, and owners, ensuring efficient data access and organization.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
