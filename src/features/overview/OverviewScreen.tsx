@@ -158,9 +158,97 @@ export function OverviewScreen() {
         </div>
       )}
 
+      {currentUser.role === 'HORSE_OWNER' && (
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <MetricCard
+            label="Nominations to approve"
+            value={raceProposals.filter((p) => p.status === 'PENDING' && horseIds.has(p.horseId)).length}
+            unit="proposals"
+            icon="clock"
+            tone={raceProposals.some((p) => p.status === 'PENDING' && horseIds.has(p.horseId)) ? 'warning' : 'default'}
+            hint="Race entry & budget authorization"
+            onClick={() => navigate('racing')}
+          />
+          <MetricCard
+            label="My horses in training"
+            value={horses.filter((h) => h.training === 'ACTIVE').length}
+            unit="horses"
+            icon="activity"
+            tone="info"
+            onClick={() => navigate('horses')}
+          />
+          <MetricCard
+            label="Admissions in progress"
+            value={candidates.filter((c) => c.owner === currentUser.owner && c.evaluation !== 'APPROVED' && c.evaluation !== 'REJECTED').length}
+            unit="applications"
+            icon="clipboard"
+            tone="neutral"
+            onClick={() => navigate('management')}
+          />
+          <MetricCard
+            label="Sound & race-ready"
+            value={horses.filter((h) => h.health === 'FIT' && h.readiness === 'Ready').length}
+            unit="horses"
+            icon="check"
+            tone="success"
+            onClick={() => navigate('horses')}
+          />
+        </div>
+      )}
+
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
         {/* Left column */}
         <div className="space-y-4">
+          {/* Horse Owner: Race Nominations Awaiting Approval */}
+          {currentUser.role === 'HORSE_OWNER' && (
+            <Panel padded>
+              <div className="flex items-center justify-between">
+                <div>
+                  <SectionTitle>Race Nominations Awaiting Approval</SectionTitle>
+                  <p className="text-[11px] text-[var(--color-text-secondary)]">
+                    Head Trainer proposals for your horses requiring entry authorization
+                  </p>
+                </div>
+                <Button variant="secondary" size="sm" onClick={() => navigate('racing')}>
+                  Open Racing
+                </Button>
+              </div>
+              {raceProposals.filter((p) => p.status === 'PENDING' && horseIds.has(p.horseId)).length === 0 ? (
+                <p className="py-4 text-center text-[13px] text-[var(--color-text-muted)]">
+                  All race nominations reviewed. No pending budget approvals.
+                </p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {raceProposals
+                    .filter((p) => p.status === 'PENDING' && horseIds.has(p.horseId))
+                    .map((prop) => (
+                      <div
+                        key={prop.id}
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-[var(--color-warning)] bg-[var(--color-warning-soft)]/20 p-3"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[13px] font-bold text-[var(--color-text-primary)]">
+                              {prop.horseName}
+                            </span>
+                            <span className="text-[12px] text-[var(--color-text-secondary)]">
+                              for {prop.raceName}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[var(--color-text-muted)]">
+                            Nominated by {prop.proposedBy} · Entry budget: £{prop.requestedBudget.toLocaleString()}
+                          </p>
+                        </div>
+                        <Button variant="primary" size="sm" onClick={() => navigate('racing')}>
+                          Review & Authorise
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </Panel>
+          )}
+
           {/* Head Trainer & Staff: Today's training schedule */}
           {canViewTrainingModule && <Panel padded>
             <div className="mb-3 flex items-center justify-between">

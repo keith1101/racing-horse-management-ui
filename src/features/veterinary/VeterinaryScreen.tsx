@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Screen } from '../../components/Screen';
 import { Button } from '../../components/Button';
 import { MetricCard } from '../../components/MetricCard';

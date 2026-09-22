@@ -122,5 +122,17 @@ export const INITIAL_RACE_PROPOSALS: RaceProposal[] = [
     status: 'PENDING',
     notes: 'Strong sectionals in gallop trials. Soundness cleared for Group 2 mile contest.',
   },
+  {
+    id: 'prop-2',
+    raceId: 'rc-2',
+    raceName: 'Ashford Downs Sprint Championship',
+    horseId: 'h-thunderbolt',
+    horseName: 'Thunder Bolt',
+    proposedBy: 'Elena Cardoso',
+    proposedDate: '20 Sep 2026',
+    requestedBudget: 1500,
+    status: 'PENDING',
+    notes: 'Clocked exceptional morning sprint (49.2 km/h avg). Fitness peaked for 1,200m turf sprint contest.',
+  },
 ];
 

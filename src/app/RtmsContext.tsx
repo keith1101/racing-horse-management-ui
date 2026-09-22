@@ -854,16 +854,18 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
   const approveRaceEntry = useCallback(
     (proposalId: string, approvedBudget: number, managerNotes?: string) => {
       if (!canPermission(currentUser.role, 'race.approve')) {
-        toast('Only a Club Manager can approve race registration and budget.', 'danger');
+        toast('Only an authorized Club Manager or Horse Owner can approve race registration and budget.', 'danger');
         return;
       }
       const proposal = raceProposals.find((p) => p.id === proposalId);
       if (!proposal) return;
 
+      const actorLabel = currentUser.role === 'HORSE_OWNER' ? 'Owner' : 'Club Manager';
+
       setRaceProposals((prev) =>
         prev.map((p) =>
           p.id === proposalId
-            ? { ...p, status: 'APPROVED', approvedBudget, managerNotes }
+            ? { ...p, status: 'APPROVED', approvedBudget, managerNotes: managerNotes || `Approved by ${actorLabel}` }
             : p,
         ),
       );
@@ -892,8 +894,8 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
         }),
       );
 
-      recordAudit('Approved race entry & budget', `${proposal.horseName} · ${proposal.raceName} (Approved: £${approvedBudget.toLocaleString()})`);
-      toast(`Approved race entry for ${proposal.horseName} with £${approvedBudget.toLocaleString()} budget`, 'success');
+      recordAudit('Approved race entry & budget', `${proposal.horseName} · ${proposal.raceName} (Approved by ${actorLabel}: £${approvedBudget.toLocaleString()})`);
+      toast(`Approved race entry for ${proposal.horseName} (£${approvedBudget.toLocaleString()} budget authorised)`, 'success');
     },
     [currentUser.role, raceProposals, recordAudit, toast],
   );
@@ -901,22 +903,24 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
   const declineRaceEntry = useCallback(
     (proposalId: string, reason: string) => {
       if (!canPermission(currentUser.role, 'race.approve')) {
-        toast('Only a Club Manager can decline race registration proposals.', 'danger');
+        toast('Only an authorized Club Manager or Horse Owner can decline race registration proposals.', 'danger');
         return;
       }
       const proposal = raceProposals.find((p) => p.id === proposalId);
       if (!proposal) return;
 
+      const actorLabel = currentUser.role === 'HORSE_OWNER' ? 'Owner' : 'Club Manager';
+
       setRaceProposals((prev) =>
         prev.map((p) =>
           p.id === proposalId
-            ? { ...p, status: 'DECLINED', managerNotes: reason }
+            ? { ...p, status: 'DECLINED', managerNotes: reason || `Declined by ${actorLabel}` }
             : p,
         ),
       );
 
       recordAudit('Declined race entry', `${proposal.horseName} · ${proposal.raceName} (${reason})`);
-      toast(`Declined entry for ${proposal.horseName}`, 'warning');
+      toast(`Declined entry nomination for ${proposal.horseName}`, 'warning');
     },
     [currentUser.role, raceProposals, recordAudit, toast],
   );

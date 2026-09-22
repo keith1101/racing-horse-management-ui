@@ -182,7 +182,6 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   HORSE_OWNER: [
     'module.overview.view',
     'module.horses.view',
-    'module.training.view',
     'module.racing.view',
     'module.management.view',
     'horse.view',
@@ -190,9 +189,9 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'admission.view',
     'admission.submit',
     'admission.resubmit',
-    'training.view',
     'medical.summary.view',
     'race.view',
+    'race.approve',
     'contract.view',
     'invoice.view',
     'finance.view',
