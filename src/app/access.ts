@@ -4,6 +4,7 @@ export type ModuleId =
   | 'training'
   | 'veterinary'
   | 'stable-care'
+  | 'stables'
   | 'racing'
   | 'management';
 
@@ -15,6 +16,7 @@ export type Permission =
   | 'module.training.view'
   | 'module.veterinary.view'
   | 'module.stable-care.view'
+  | 'module.stables.view'
   | 'module.racing.view'
   | 'module.management.view'
   | 'horse.view'
@@ -23,12 +25,10 @@ export type Permission =
   | 'horse.documents.view'
   | 'admission.view'
   | 'admission.submit'
-  | 'admission.resubmit'
   | 'admission.review.groom'
   | 'admission.review.vet'
-  | 'admission.review.trainer'
+  | 'admission.assess.trainer'
   | 'admission.approve'
-  | 'admission.request_info'
   | 'training.view'
   | 'training.manage'
   | 'training.log'
@@ -89,20 +89,19 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   'module.training.view': 'Open Training Management',
   'module.veterinary.view': 'Open Medical & Health',
   'module.stable-care.view': 'Open Stable & Daily Care',
+  'module.stables.view': 'Open Stable Management',
   'module.racing.view': 'Open Racing',
   'module.management.view': 'Open Admissions & Management',
   'horse.view': 'View official horse profiles',
-  'horse.create': 'Create official Horse after approval',
+  'horse.create': 'Directly register a Horse',
   'horse.export': 'Export horse register',
   'horse.documents.view': 'View ownership documents',
   'admission.view': 'View admission applications',
   'admission.submit': 'Submit admission application',
-  'admission.resubmit': 'Resubmit requested admission information',
   'admission.review.groom': 'Complete Groom admission review',
   'admission.review.vet': 'Complete Veterinarian admission review',
-  'admission.review.trainer': 'Complete Trainer admission review',
-  'admission.approve': 'Approve final admission and create Horse',
-  'admission.request_info': 'Request admission information',
+  'admission.assess.trainer': 'Create racing readiness assessment',
+  'admission.approve': 'Approve final admission and assign a regular stall',
   'training.view': 'View training plans and results',
   'training.manage': 'Create and maintain training plans',
   'training.log': 'Complete workouts and record results',
@@ -134,13 +133,13 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'module.overview.view',
     'module.horses.view',
     'module.training.view',
+    'module.stables.view',
     'module.racing.view',
     'module.management.view',
     'horse.view',
     'horse.export',
     'admission.view',
-    'admission.review.trainer',
-    'admission.request_info',
+    'admission.assess.trainer',
     'training.view',
     'training.manage',
     'training.log',
@@ -152,11 +151,11 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'module.overview.view',
     'module.horses.view',
     'module.veterinary.view',
+    'module.stables.view',
     'module.management.view',
     'horse.view',
     'admission.view',
     'admission.review.vet',
-    'admission.request_info',
     'medical.summary.view',
     'medical.private.view',
     'medical.record',
@@ -169,11 +168,11 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'module.horses.view',
     'module.veterinary.view',
     'module.stable-care.view',
+    'module.stables.view',
     'module.management.view',
     'horse.view',
     'admission.view',
     'admission.review.groom',
-    'admission.request_info',
     'medical.summary.view',
     'stable-care.view',
     'stable-care.execute',
@@ -188,7 +187,6 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'horse.documents.view',
     'admission.view',
     'admission.submit',
-    'admission.resubmit',
     'medical.summary.view',
     'race.view',
     'race.approve',
@@ -199,6 +197,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   CLUB_MANAGER: [
     'module.overview.view',
     'module.horses.view',
+    'module.stables.view',
     'module.racing.view',
     'module.management.view',
     'horse.view',
@@ -207,7 +206,6 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'horse.documents.view',
     'admission.view',
     'admission.approve',
-    'admission.request_info',
     'training.view',
     'medical.summary.view',
     'race.view',
@@ -229,6 +227,7 @@ const modulePermission: Record<ModuleId, Permission> = {
   training: 'module.training.view',
   veterinary: 'module.veterinary.view',
   'stable-care': 'module.stable-care.view',
+  stables: 'module.stables.view',
   racing: 'module.racing.view',
   management: 'module.management.view',
 };
@@ -258,33 +257,29 @@ export function getModulePermission(module: ModuleId) {
 }
 
 export type AdmissionStage =
-  | 'SUBMITTED'
   | 'GROOM_REVIEW'
   | 'WAITING_FOR_STALL'
   | 'VET_REVIEW'
   | 'TRAINER_REVIEW'
   | 'MANAGER_REVIEW'
   | 'APPROVED'
-  | 'REJECTED'
-  | 'ADDITIONAL_INFORMATION_REQUIRED';
+  | 'REJECTED';
 
 export const ADMISSION_STAGE_LABELS: Record<AdmissionStage, string> = {
-  SUBMITTED: 'Submitted',
   GROOM_REVIEW: 'Groom review',
   WAITING_FOR_STALL: 'Waiting for stall assignment',
   VET_REVIEW: 'Veterinarian review',
-  TRAINER_REVIEW: 'Head Trainer review',
+  TRAINER_REVIEW: 'Trainer assessment',
   MANAGER_REVIEW: 'Manager final review',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
-  ADDITIONAL_INFORMATION_REQUIRED: 'Information required',
 };
 
-export const ADMISSION_REVIEW_PERMISSIONS: Record<Exclude<AdmissionStage, 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'ADDITIONAL_INFORMATION_REQUIRED'>, Permission> = {
+export const ADMISSION_REVIEW_PERMISSIONS: Record<Exclude<AdmissionStage, 'APPROVED' | 'REJECTED'>, Permission> = {
   GROOM_REVIEW: 'admission.review.groom',
   WAITING_FOR_STALL: 'admission.review.groom',
   VET_REVIEW: 'admission.review.vet',
-  TRAINER_REVIEW: 'admission.review.trainer',
+  TRAINER_REVIEW: 'admission.assess.trainer',
   MANAGER_REVIEW: 'admission.approve',
 };
 
@@ -294,7 +289,6 @@ export function canReviewAdmissionStage(role: Role, stage: AdmissionStage) {
 }
 
 export function getNextAdmissionStage(stage: AdmissionStage): AdmissionStage | undefined {
-  if (stage === 'SUBMITTED' || stage === 'ADDITIONAL_INFORMATION_REQUIRED') return 'GROOM_REVIEW';
   if (stage === 'GROOM_REVIEW' || stage === 'WAITING_FOR_STALL') return 'VET_REVIEW';
   if (stage === 'VET_REVIEW') return 'TRAINER_REVIEW';
   if (stage === 'TRAINER_REVIEW') return 'MANAGER_REVIEW';
@@ -302,7 +296,9 @@ export function getNextAdmissionStage(stage: AdmissionStage): AdmissionStage | u
   return undefined;
 }
 
-export function getRaceEligibility(horse: { health: string; readiness: string; id: string }, locked: boolean) {
+export function getRaceEligibility(horse: { health: string; readiness: string; id: string; currentStatus?: string }, locked: boolean) {
+  if (horse.currentStatus === 'CANDIDATE') return 'Admission approval is required before racing';
+  if (horse.currentStatus === 'REJECTED') return 'This horse is not eligible to race';
   if (locked) return 'Training restriction is active';
   if (horse.health === 'ISOLATED') return 'Isolation/quarantine is active';
   if (horse.health === 'INJURED') return 'Medical clearance is required';

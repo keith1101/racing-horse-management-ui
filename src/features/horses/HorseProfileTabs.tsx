@@ -298,7 +298,7 @@ export function HorseRaceHistoryTab({ horse }: { horse: Horse }) {
           <SectionTitle>Race history</SectionTitle>
           <Button variant="tertiary" size="sm" icon="flag" onClick={() => navigate('racing', { view: 'history' })}>All race history</Button>
         </div>
-        <DataTable columns={columns} rows={runs} rowKey={(r) => r.id} empty={<EmptyState icon="flag" title="No race history" description="This horse has not yet started in a race." />} />
+        <DataTable columns={columns} rows={runs} rowKey={(r) => r.id} empty={<EmptyState icon="flag" title="No race history recorded" description="No race results are recorded for this horse." />} />
       </Panel>
     </div>
   );
@@ -363,7 +363,7 @@ function ordinal(n: number) {
 }
 
 function simplifiedHealthNote(status: Horse['health']) {
-  if (status === 'FIT') return 'Cleared for normal operations.';
+  if (status === 'FIT') return 'Health status is marked fit.';
   if (status === 'MONITOR') return 'Health monitoring is active.';
   if (status === 'INJURED') return 'Veterinary follow-up is required.';
   return 'Isolation or quarantine protocol is active.';

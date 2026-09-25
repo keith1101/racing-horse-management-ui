@@ -199,7 +199,7 @@ function HorseManagementListScreen() {
       />
 
       {/* Content */}
-      <div className="min-h-0 flex-1 p-4">
+      <div className="scroll-slim min-h-0 flex-1 overflow-y-auto p-4">
         {view === 'split' ? (
           <div className="flex h-[calc(100vh-9.5rem)] min-h-[520px] gap-4">
             {/* Master */}

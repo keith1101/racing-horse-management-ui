@@ -9,7 +9,8 @@ import {
 import { ToastStack, type ToastMessage } from '../components/Toast';
 import { HORSES, MAX_STALLS_PER_GROOM, type Horse, type TrainingLock } from '../features/horses/horseData';
 import { CARE_TASKS, type CareTask } from '../features/care/careData';
-import { CANDIDATES, type Candidate, type CandidateStatus } from '../features/management/candidateData';
+import { CANDIDATES, REQUIRED_ADMISSION_DOCUMENTS, type Candidate, type CandidateStatus, type RacingReadinessAssessment } from '../features/management/candidateData';
+import { QUARANTINE_STALLS, REGULAR_STALLS } from '../features/stables/stableData';
 import {
   getMedicalRecord as getStaticMedicalRecord,
   type Examination,
@@ -141,10 +142,11 @@ interface RtmsContextValue {
   candidates: Candidate[];
   addCandidate: (candidate: Candidate) => void;
   getCandidateStatus: (candidate: Candidate) => CandidateStatus;
-  canReviewCandidate: (candidate: Candidate) => boolean;
-  updateCandidateStatus: (id: string, status: CandidateStatus) => void;
-  assignCandidateStall: (id: string, stable: string, stall: string) => void;
-  approveCandidate: (candidate: Candidate) => void;
+  reviewGroomAdmission: (candidate: Candidate) => void;
+  approveVeterinaryAdmission: (candidate: Candidate) => void;
+  submitReadinessAssessment: (candidate: Candidate, assessment: RacingReadinessAssessment) => void;
+  rejectCandidate: (candidate: Candidate, feedback?: string) => void;
+  approveCandidate: (candidate: Candidate, stable: string, stall: string) => void;
 
   // Training Courses, Sessions & Logging
   courses: Course[];
@@ -211,7 +213,16 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
   const [sessionUserId, setSessionUserId] = useState<string | null>(readStoredUserId);
 
   const [lockOverrides, setLockOverrides] = useState<Record<string, TrainingLock | null>>({});
-  const [additionalHorses, setAdditionalHorses] = useState<Horse[]>([]);
+  const [additionalHorses, setAdditionalHorses] = useState<Horse[]>(() =>
+    CANDIDATES.filter((candidate) => candidate.horseId).map((candidate) => ({
+      id: candidate.horseId!, admissionId: candidate.id, currentStatus: 'CANDIDATE' as const,
+      name: candidate.name, image: candidate.image, sex: candidate.sex, breed: candidate.breed,
+      foaled: candidate.dateOfBirth ?? '', ageYears: candidate.ageYears, microchip: candidate.registrationNumber ?? '', sire: candidate.sire, dam: candidate.dam,
+      health: candidate.healthScreening === 'Passed' ? 'FIT' : 'MONITOR', healthNote: 'Admission Candidate in quarantine.', stable: 'Quarantine', stall: candidate.stall ?? 'Q01', owner: candidate.owner, trainer: 'Unassigned',
+      training: 'DRAFT', activePlan: 'Admission assessment', phase: 'Quarantine', nextWorkout: 'Not available until eligible', readiness: 'Restricted', weightKg: 0, restingHrBpm: 0,
+      schedule: [{ time: 'To be arranged', type: 'Treatment' as const, title: 'Initial admission examination', staff: 'Veterinary team' }], activity: [{ time: 'Seed record', actor: 'System', event: 'Candidate created in quarantine' }],
+    })),
+  );
   const [medicalRecords, setMedicalRecords] = useState<Record<string, MedicalRecord>>({});
 
   // Care tasks & stall assignments
@@ -248,7 +259,6 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
     },
   ]);
   const [candidateStatuses, setCandidateStatuses] = useState<Record<string, CandidateStatus>>({});
-  const [candidateResumeStages, setCandidateResumeStages] = useState<Record<string, AdmissionStage>>({ 'cand-7': 'GROOM_REVIEW' });
   const [candidates, setCandidates] = useState<Candidate[]>(CANDIDATES);
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
@@ -456,6 +466,11 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
         const previous = records[horseId] ?? getStaticMedicalRecord(horseId);
         return { ...records, [horseId]: { ...previous, examinations: [examination, ...previous.examinations] } };
       });
+      setCandidates((items) => items.map((candidate) =>
+        candidate.horseId === horseId && candidate.examSchedule?.status === 'PENDING'
+          ? { ...candidate, examSchedule: { ...candidate.examSchedule, status: 'COMPLETED', scheduledDate: candidate.examSchedule.scheduledDate ?? examination.date } }
+          : candidate,
+      ));
       recordAudit('Recorded examination', `${getHorse(horseId)?.name ?? horseId} · ${examination.diagnosis}`);
     },
     [currentUser.role, getHorse, recordAudit, toast],
@@ -597,15 +612,14 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
     [candidateStatuses],
   );
 
-  const canReviewCandidate = useCallback(
-    (candidate: Candidate) => canReviewAdmissionStage(currentUser.role, getCandidateStatus(candidate) as AdmissionStage),
-    [currentUser.role, getCandidateStatus],
-  );
-
   const addCandidate = useCallback(
     (candidate: Candidate) => {
       if (!canPermission(currentUser.role, 'admission.submit')) {
         toast('Only a horse owner can submit an admission application.', 'danger');
+        return;
+      }
+      if (candidate.owner !== currentUser.owner || REQUIRED_ADMISSION_DOCUMENTS.some((type) => !candidate.documents?.some((document) => document.type === type))) {
+        toast('The owner identity and all four required admission documents are required.', 'danger');
         return;
       }
       setCandidates((items) => [...items, { ...candidate, evaluation: 'GROOM_REVIEW' }]);
@@ -614,84 +628,70 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
     [currentUser.role, recordAudit, toast],
   );
 
-  const updateCandidateStatus = useCallback(
-    (id: string, status: CandidateStatus) => {
-      const candidate = candidates.find((item) => item.id === id);
-      if (!candidate) return;
-      const currentStatus = getCandidateStatus(candidate) as AdmissionStage;
-      const isRequestingInfo = status === 'ADDITIONAL_INFORMATION_REQUIRED';
-      const isRejecting = status === 'REJECTED';
-      const nextStage = getNextAdmissionStage(currentStatus);
-      const isAdvancing = status === nextStage;
-      const resumeStage = candidateResumeStages[id] ?? 'GROOM_REVIEW';
-      const isResubmitting = currentStatus === 'ADDITIONAL_INFORMATION_REQUIRED' && status === resumeStage && canPermission(currentUser.role, 'admission.resubmit');
-      const allowed = isRequestingInfo
-        ? canPermission(currentUser.role, 'admission.request_info') && canReviewAdmissionStage(currentUser.role, currentStatus)
-        : isResubmitting || ((isRejecting || isAdvancing) && canReviewAdmissionStage(currentUser.role, currentStatus));
+  const reviewGroomAdmission = useCallback((candidate: Candidate) => {
+    if (!canPermission(currentUser.role, 'admission.review.groom') || !['GROOM_REVIEW', 'WAITING_FOR_STALL'].includes(getCandidateStatus(candidate)) || REQUIRED_ADMISSION_DOCUMENTS.some((type) => !candidate.documents?.some((document) => document.type === type))) {
+      toast('This admission is not awaiting Groom review.', 'danger'); return;
+    }
+    const occupied = new Set([...additionalHorses, ...HORSES].filter((horse) => horse.currentStatus === 'CANDIDATE').map((horse) => horse.stall));
+    const stall = QUARANTINE_STALLS.find((slot) => !occupied.has(slot.stall));
+    const regularAvailable = REGULAR_STALLS.filter((slot) => ![...additionalHorses, ...HORSES].some((horse) => horse.stable === slot.stable && horse.stall === slot.stall)).length;
+    const candidateCount = [...additionalHorses, ...HORSES].filter((horse) => horse.currentStatus === 'CANDIDATE').length;
+    if (!stall || regularAvailable < candidateCount + 1) { setCandidateStatuses((s) => ({ ...s, [candidate.id]: 'WAITING_FOR_STALL' })); toast('No capacity is available for this admission. It remains waiting for a stall.', 'warning'); return; }
+    const horseId = candidate.horseId ?? `h-admission-${candidate.id.replace('cand-', '')}`;
+    const horse: Horse = {
+      id: horseId, admissionId: candidate.id, currentStatus: 'CANDIDATE', name: candidate.name, image: candidate.image,
+      sex: candidate.sex, breed: candidate.breed, foaled: candidate.dateOfBirth ?? '', ageYears: candidate.ageYears,
+      microchip: candidate.registrationNumber ?? '', sire: candidate.sire, dam: candidate.dam, health: 'MONITOR', healthNote: 'In quarantine pending initial veterinary examination.',
+      stable: stall.stable, stall: stall.stall, owner: candidate.owner, trainer: 'Unassigned', training: 'DRAFT', activePlan: 'Admission assessment', phase: 'Quarantine', nextWorkout: 'Not available until eligible', readiness: 'Restricted', weightKg: 0, restingHrBpm: 0,
+      schedule: [{ time: 'To be arranged', type: 'Treatment', title: 'Initial admission examination', staff: 'Veterinary team' }],
+      activity: [{ time: nowStamp(), actor: currentUser.name, event: 'Created as Candidate and placed in quarantine' }],
+    };
+    setAdditionalHorses((items) => items.some((item) => item.id === horseId) ? items : [...items, horse]);
+    setMedicalRecords((records) => records[horseId] ? records : ({ ...records, [horseId]: { horseId, examinations: [] } }));
+    setCandidates((items) => items.map((item) => item.id === candidate.id ? { ...item, horseId, stable: stall.stable, stall: stall.stall, examSchedule: { id: `initial-exam-${candidate.id}`, status: 'PENDING', description: 'Initial admission examination in quarantine' } } : item));
+    setCandidateStatuses((s) => ({ ...s, [candidate.id]: 'VET_REVIEW' }));
+    recordAudit('Groom accepted admission', `${candidate.name} · Candidate created in Quarantine ${stall.stall}`);
+    toast(`${candidate.name} is a Candidate in Quarantine ${stall.stall}; initial exam sent to Veterinary.`, 'success');
+  }, [additionalHorses, currentUser.name, getCandidateStatus, recordAudit, toast]);
 
-      if (!allowed) {
-        toast('This application is waiting for the assigned reviewer in the current stage.', 'danger');
-        return;
-      }
-      if (isRequestingInfo) setCandidateResumeStages((stages) => ({ ...stages, [id]: currentStatus }));
-      setCandidateStatuses((statuses) => ({ ...statuses, [id]: status }));
-      recordAudit(isRequestingInfo ? 'Requested admission information' : isRejecting ? 'Rejected admission application' : isResubmitting ? 'Resubmitted admission information' : 'Advanced admission review', `${candidate.name} · ${currentStatus} → ${status}`);
-    },
-    [candidateResumeStages, candidates, currentUser.role, getCandidateStatus, recordAudit, toast],
-  );
+  const approveVeterinaryAdmission = useCallback((candidate: Candidate) => {
+    if (!canPermission(currentUser.role, 'admission.review.vet') || getCandidateStatus(candidate) !== 'VET_REVIEW') { toast('This admission is not awaiting Veterinary review.', 'danger'); return; }
+    if (!candidate.horseId || candidate.examSchedule?.status !== 'COMPLETED') { toast('Record the initial examination before approving this admission.', 'warning'); return; }
+    setCandidateStatuses((s) => ({ ...s, [candidate.id]: 'TRAINER_REVIEW' }));
+    setCandidates((items) => items.map((item) => item.id === candidate.id ? { ...item, healthScreening: 'Passed', vetFeedback: 'Initial examination completed and accepted.' } : item));
+    recordAudit('Veterinary admission review accepted', `${candidate.name} → TRAINER_REVIEW`);
+  }, [currentUser.role, getCandidateStatus, recordAudit, toast]);
 
-  const assignCandidateStall = useCallback(
-    (id: string, stable: string, stall: string) => {
-      const candidate = candidates.find((item) => item.id === id);
-      if (!candidate || getCandidateStatus(candidate) !== 'WAITING_FOR_STALL' || !canPermission(currentUser.role, 'admission.review.groom')) {
-        toast('Only Groom can assign a stall while the application is waiting for placement.', 'danger');
-        return;
-      }
-      setCandidates((items) => items.map((item) => item.id === id ? { ...item, stable, stall } : item));
-      setCandidateStatuses((statuses) => ({ ...statuses, [id]: 'VET_REVIEW' }));
-      recordAudit('Assigned admission stall', `${candidate.name} · ${stable} ${stall} → VET_REVIEW`);
-      toast(`${candidate.name} assigned to ${stable} ${stall} and sent to veterinary review`, 'success');
-    },
-    [candidates, currentUser.role, getCandidateStatus, recordAudit, toast],
-  );
+  const submitReadinessAssessment = useCallback((candidate: Candidate, assessment: RacingReadinessAssessment) => {
+    if (!canPermission(currentUser.role, 'admission.assess.trainer') || getCandidateStatus(candidate) !== 'TRAINER_REVIEW') { toast('This admission is not awaiting a Trainer assessment.', 'danger'); return; }
+    setCandidates((items) => items.map((item) => item.id === candidate.id ? { ...item, readinessAssessment: assessment } : item));
+    setCandidateStatuses((s) => ({ ...s, [candidate.id]: 'MANAGER_REVIEW' }));
+    recordAudit('Recorded racing readiness assessment', `${candidate.name} → MANAGER_REVIEW`);
+    toast(`${candidate.name}'s assessment was sent to the Manager.`, 'success');
+  }, [currentUser.role, getCandidateStatus, recordAudit, toast]);
+
+  const rejectCandidate = useCallback((candidate: Candidate, feedback?: string) => {
+    const stage = getCandidateStatus(candidate);
+    const canReject = (stage === 'GROOM_REVIEW' || stage === 'WAITING_FOR_STALL') && canPermission(currentUser.role, 'admission.review.groom') || stage === 'VET_REVIEW' && canPermission(currentUser.role, 'admission.review.vet') || stage === 'MANAGER_REVIEW' && canPermission(currentUser.role, 'admission.approve');
+    if (!canReject) { toast('This admission is waiting for the assigned reviewer.', 'danger'); return; }
+    setCandidateStatuses((s) => ({ ...s, [candidate.id]: 'REJECTED' }));
+    setCandidates((items) => items.map((item) => item.id === candidate.id ? { ...item, managerFeedback: feedback ?? 'Admission rejected.' } : item));
+    if (candidate.horseId) setAdditionalHorses((items) => items.map((horse) => horse.id === candidate.horseId ? { ...horse, currentStatus: 'REJECTED', stable: '—', stall: '—' } : horse));
+    recordAudit('Rejected admission application', candidate.name);
+  }, [currentUser.role, getCandidateStatus, recordAudit, toast]);
 
   const approveCandidate = useCallback(
-    (candidate: Candidate) => {
+    (candidate: Candidate, stable: string, stall: string) => {
       if (!canPermission(currentUser.role, 'admission.approve') || getCandidateStatus(candidate) !== 'MANAGER_REVIEW') {
         toast('Only the Club Manager can approve an application in Manager final review.', 'danger');
         return;
       }
-      const horseId = candidate.id.replace('cand-', 'h-admitted-');
-      const horse: Horse = {
-        id: horseId,
-        name: candidate.name,
-        image: candidate.image,
-        sex: candidate.sex,
-        breed: candidate.breed,
-        foaled: `${2026 - candidate.ageYears}-06-01`,
-        ageYears: candidate.ageYears,
-        microchip: `RTMS-${candidate.id.toUpperCase()}`,
-        sire: candidate.sire,
-        dam: candidate.dam,
-        health: candidate.healthScreening === 'Passed' ? 'FIT' : 'MONITOR',
-        healthNote: candidate.healthScreening === 'Passed' ? 'Cleared at admission screening' : 'Admission health follow-up required',
-        stable: candidate.stable ?? 'Barn C',
-        stall: candidate.stall ?? 'C12',
-        owner: candidate.owner,
-        trainer: currentUser.name,
-        training: 'DRAFT',
-        activePlan: 'Intake Assessment',
-        phase: 'Admission',
-        nextWorkout: 'Plan pending trainer review',
-        readiness: 'Building',
-        weightKg: 0,
-        restingHrBpm: 0,
-        schedule: [{ time: '10:00', type: 'Groom task', title: 'Admission familiarisation', staff: currentUser.name }],
-        activity: [{ time: nowStamp(), actor: currentUser.name, event: 'Promoted from candidate intake' }],
-      };
+      if (!candidate.horseId || !candidate.readinessAssessment) { toast('A Candidate horse and racing readiness assessment are required before final approval.', 'danger'); return; }
+      if (!REGULAR_STALLS.some((slot) => slot.stable === stable && slot.stall === stall) || [...HORSES, ...additionalHorses].some((horse) => horse.stable === stable && horse.stall === stall && horse.id !== candidate.horseId)) { toast('Choose an available regular stable slot.', 'danger'); return; }
       setCandidateStatuses((statuses) => ({ ...statuses, [candidate.id]: 'APPROVED' }));
-      setAdditionalHorses((items) => (items.some((item) => item.id === horse.id) ? items : [...items, horse]));
-      recordAudit('Approved candidate', `${candidate.name} · added to Horse Management`);
+      setCandidates((items) => items.map((item) => item.id === candidate.id ? { ...item, stable, stall, managerFeedback: 'Approved for eligible status and regular housing.' } : item));
+      setAdditionalHorses((items) => items.map((horse) => horse.id === candidate.horseId ? { ...horse, currentStatus: 'ELIGIBLE', stable, stall, health: 'FIT', healthNote: 'Eligible after admission approval.', trainer: candidate.readinessAssessment?.trainer ?? horse.trainer, training: 'DRAFT', readiness: candidate.readinessAssessment?.status === 'READY' ? 'Ready' : 'Building', phase: 'Admission complete', nextWorkout: 'Trainer to assign plan', activity: [{ time: nowStamp(), actor: currentUser.name, event: `Approved as eligible and assigned ${stable} ${stall}` }, ...horse.activity] } : horse));
+      recordAudit('Approved candidate', `${candidate.name} · eligible in ${stable} ${stall}`);
     },
     [currentUser, getCandidateStatus, recordAudit, toast],
   );
@@ -719,6 +719,10 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
       }
       const horse = allHorses.find((h) => h.id === horseId);
       if (!horse) return { success: false, message: 'Horse not found' };
+      if (horse.currentStatus && horse.currentStatus !== 'ELIGIBLE') {
+        toast('A Candidate horse cannot begin training before Manager eligibility approval.', 'danger');
+        return { success: false, message: 'Horse is not eligible' };
+      }
       if (getLock(horseId)) {
         toast('Cannot assign a training plan while a veterinary restriction is active.', 'danger');
         return { success: false, message: 'Horse is under medical restriction' };
@@ -971,9 +975,10 @@ export function RtmsProvider({ children }: { children: ReactNode }) {
     candidates: visibleCandidates,
     addCandidate,
     getCandidateStatus,
-    canReviewCandidate,
-    updateCandidateStatus,
-    assignCandidateStall,
+    reviewGroomAdmission,
+    approveVeterinaryAdmission,
+    submitReadinessAssessment,
+    rejectCandidate,
     approveCandidate,
     courses,
     addCourse,

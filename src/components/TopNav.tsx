@@ -15,6 +15,7 @@ const MODULES: NavModule[] = [
   { id: 'training', label: 'Training' },
   { id: 'veterinary', label: 'Veterinary' },
   { id: 'stable-care', label: 'Stable care' },
+  { id: 'stables', label: 'Stables' },
   { id: 'racing', label: 'Racing' },
   { id: 'management', label: 'Management' },
 ];
@@ -54,7 +55,7 @@ export function TopNav({ active, onNavigate }: TopNavProps) {
         <span className="text-[15px] font-semibold tracking-tight text-[var(--color-text-primary)]">RTMS</span>
       </div>
 
-      <nav className="hidden items-center gap-0.5 md:flex" aria-label="Primary">
+      <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary">
         {modules.map((module) => {
           const isActive = module.id === active;
           return (
@@ -75,7 +76,7 @@ export function TopNav({ active, onNavigate }: TopNavProps) {
           );
         })}
       </nav>
-      <label className="relative md:hidden">
+      <label className="relative lg:hidden">
         <span className="sr-only">Current module</span>
         <select
           aria-label="Current module"

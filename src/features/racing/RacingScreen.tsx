@@ -183,13 +183,13 @@ function RaceOverview() {
             value={podiums}
             unit={`/ ${historyList.length} starts`}
             icon="trending-up"
-            tone="primary"
+            tone="info"
           />
           <MetricCard
             label="Season wins"
             value={wins}
             unit={`/ ${historyList.length} starts`}
-            icon="award"
+            icon="flag"
             tone="success"
           />
         </div>

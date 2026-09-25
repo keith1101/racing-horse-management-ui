@@ -208,7 +208,7 @@ export function TreatmentScheduleScreen() {
             <EmptyState 
               icon="check" 
               title="No active treatments" 
-              description="All horses cleared. Active treatment plans will display medication tasks here." 
+              description="Medication tasks appear here when an active treatment plan is recorded."
             />
           </Panel>
         ) : groupedTasks.size === 0 ? (

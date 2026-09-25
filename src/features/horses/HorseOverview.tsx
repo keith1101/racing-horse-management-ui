@@ -64,7 +64,7 @@ export function HorseOverview({ horse }: { horse: Horse }) {
                       const newGroom = e.target.value;
                       const res = assignGroomToStall(horse.stall, newGroom);
                       if (!res.success) {
-                        toast(res.message, 'error');
+                        toast(res.message, 'danger');
                       } else {
                         toast(`Assigned ${newGroom || 'nobody'} to Stall ${horse.stall} (${horse.name})`, 'success');
                       }

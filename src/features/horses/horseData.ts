@@ -21,6 +21,9 @@ export interface ScheduleEntry {
 
 export interface Horse {
   id: string;
+  /** Admission horses remain CANDIDATE until the Manager assigns a regular stall. */
+  currentStatus?: 'CANDIDATE' | 'ELIGIBLE' | 'REJECTED';
+  admissionId?: string;
   name: string;
   image: string;
   sex: 'Colt' | 'Filly' | 'Gelding' | 'Mare' | 'Stallion';

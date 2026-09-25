@@ -220,7 +220,7 @@ export function MedicalRecordScreen() {
               <EmptyState
                 icon="pill"
                 title="No active treatment"
-                description="This horse has no treatment plan on record. Cleared at last examination."
+                description="This horse has no treatment plan on record."
                 action={can('medical.treatment.manage') ? (
                   <Button variant="primary" size="sm" icon="plus" onClick={() => navigate('veterinary', { view: 'treatment', horseId: horse.id })}>
                     Create treatment plan

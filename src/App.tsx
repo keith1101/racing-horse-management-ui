@@ -5,6 +5,7 @@ import { OverviewScreen } from './features/overview/OverviewScreen';
 import { TrainingScreen } from './features/training/TrainingScreen';
 import { VeterinaryScreen } from './features/veterinary/VeterinaryScreen';
 import { StableCareScreen } from './features/care/StableCareScreen';
+import { StableManagementScreen } from './features/stables/StableManagementScreen';
 import { RacingScreen } from './features/racing/RacingScreen';
 import { ManagementScreen } from './features/management/ManagementScreen';
 import { LoginScreen } from './features/auth/LoginScreen';
@@ -20,7 +21,7 @@ function AppContent() {
 }
 
 function Router() {
-  const { route, canAccessModule } = useRtms();
+  const { route, canAccessModule, horses, navigate, can } = useRtms();
   if (!canAccessModule(route.module)) return <AccessDeniedScreen />;
   switch (route.module) {
     case 'overview':
@@ -33,6 +34,8 @@ function Router() {
       return <VeterinaryScreen />;
     case 'stable-care':
       return <StableCareScreen />;
+    case 'stables':
+      return <StableManagementScreen horses={horses} onOpenHorse={(horse) => navigate('horses', { horseId: horse.id })} onOpenAdmissions={can('admission.approve') ? () => navigate('management') : undefined} />;
     case 'racing':
       return <RacingScreen />;
     case 'management':

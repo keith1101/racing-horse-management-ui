@@ -63,11 +63,11 @@ const ROLE_TABS: RoleTabInfo[] = [
     badge: 'Stable Operations',
     tone: 'var(--color-grooming)',
     icon: 'utensils',
-    summary: 'Frontline care across active barns, maintaining nutritional regimens, stall sanitation, and physical observations.',
+    summary: 'Frontline care across active barns, maintaining feeding routines, stall care, and physical observations.',
     features: [
       'Shift-based care checklists: feeds, fresh bedding, hand-walking, and grooming routines',
-      'Instant observation and incident reporting routed directly to the Veterinarian queue',
-      'Microchip intake verification and physical condition logging for arriving candidates',
+      'Observation and incident reporting available for veterinary review',
+      'Create Candidate Horse records and log identity details and intake condition',
       'Continuous monitoring of hydration, feeding enthusiasm, and behavioral temperament',
     ],
     metricLabel: 'Shift checklist completion',
@@ -85,7 +85,7 @@ const ROLE_TABS: RoleTabInfo[] = [
       'Row-level data isolation: Owners access only thoroughbreds under their registered ownership',
       'Pedigree lineage details (Sire/Dam), registration badges, and designated stall locations',
       'Official race records, finishing margins, sectional splits, and prize purse statements',
-      'Self-service admission application submission with certificate uploads',
+      'Self-service admission with four required documents and four optional supporting documents',
     ],
     metricLabel: 'Transparency satisfaction',
     metricValue: '99.1%',
@@ -99,7 +99,7 @@ const ROLE_TABS: RoleTabInfo[] = [
     icon: 'building',
     summary: 'Executive leadership overseeing facility capacity, operational budget authorizations, and regulatory compliance.',
     features: [
-      'Final gatekeeper for horse admissions: approves official club entry and assigns permanent stalls',
+      'Makes the final admission eligibility decision and assigns the horse’s final stable slot',
       'Review and approve/decline racing proposals with allocated budget authorizations',
       'Barn and stall capacity utilization management across all club facilities',
       'Comprehensive tamper-evident audit trail tracking all cross-department actions',
@@ -122,48 +122,48 @@ interface AdmissionStep {
 const ADMISSION_STEPS: AdmissionStep[] = [
   {
     stepNumber: 1,
-    stageName: 'Initial Submission',
+    stageName: 'Owner Submission',
     roleBadge: 'Horse Owner',
     roleTone: 'var(--color-racing)',
-    title: 'Candidate Dossier & Pedigree Upload',
-    description: 'The registered owner submits candidate thoroughbred identity, foaling date, pedigree lineage (Sire/Dam), vaccination passport, and Stud Book certificates.',
-    deliverables: ['Vaccination & microchip passport', 'Stud Book pedigree certificate', 'Proof of ownership transfer'],
+    title: 'Submit the horse admission dossier',
+    description: 'The owner submits horse identity details and documents. Horse photo, registration document, pedigree certificate, and vaccination record are required; four supporting medical documents are optional.',
+    deliverables: ['Four required documents', 'Four optional supporting documents', 'Admission sent to Groom review'],
   },
   {
     stepNumber: 2,
-    stageName: 'Intake & Identification',
+    stageName: 'Candidate & Quarantine',
     roleBadge: 'Groom / Stable Hand',
     roleTone: 'var(--color-grooming)',
-    title: 'Staging Inspection & Microchip Scan',
-    description: 'The stable hand receives the horse at the intake bay, scans the 15-digit microchip to verify physical identity against the digital dossier, and logs baseline physical markings.',
-    deliverables: ['15-digit microchip verification', 'Quarantine stall intake receipt', 'Dermatology & physical marking log'],
+    title: 'Create the Candidate Horse in quarantine',
+    description: 'After approving the dossier, the Groom creates a Candidate Horse and assigns an available quarantine slot. The system creates an initial exam schedule and makes the medical dossier available to Veterinary.',
+    deliverables: ['Candidate Horse record', 'Quarantine slot', 'Initial exam schedule and medical dossier'],
   },
   {
     stepNumber: 3,
-    stageName: 'Clinical & Biosecurity Exam',
+    stageName: 'Veterinary Examination & Approval',
     roleBadge: 'Veterinarian',
     roleTone: 'var(--color-medical)',
-    title: 'Veterinary Soundness & Quarantine Clearance',
-    description: 'The attending veterinarian conducts flexion tests, biosecurity screening, blood panels, and cardiac assessments to clear the horse for athletic training.',
-    deliverables: ['Clinical physical examination report', 'Biosecurity quarantine sign-off', 'Preventive vaccination & care schedule'],
+    title: 'Record the examination and approve veterinary review',
+    description: 'The veterinarian arranges and records the examination from the initial schedule, then approves the veterinary review. This approval does not end quarantine; release waits for final stable-slot assignment.',
+    deliverables: ['Medical record entry', 'Veterinary review approval', 'Quarantine remains in effect'],
   },
   {
     stepNumber: 4,
-    stageName: 'Conformation & Track Trial',
+    stageName: 'Trainer Assessment',
     roleBadge: 'Head Trainer',
     roleTone: 'var(--color-training)',
-    title: 'Stride Analysis & Conformation Assessment',
-    description: 'The head trainer evaluates structural conformation, stride kinematics during a timed track trial, breathing recovery, and athletic potential.',
-    deliverables: ['Conformation & gait trial report', 'Stride sectional timing evaluation', 'Initial course curriculum recommendation'],
+    title: 'Create a racing readiness assessment',
+    description: 'The trainer creates a RACING_READINESS_ASSESSMENT to document racing readiness. This records an assessment; the trainer does not approve the admission.',
+    deliverables: ['RACING_READINESS_ASSESSMENT record', 'Trainer readiness findings'],
   },
   {
     stepNumber: 5,
-    stageName: 'Final Approval & Allocation',
+    stageName: 'Final Eligibility & Slot',
     roleBadge: 'Club Manager',
     roleTone: 'var(--color-finance)',
-    title: 'Official Induction & Stall Allocation',
-    description: 'The club manager reviews combined departmental recommendations, authorizes the boarding contract, assigns a permanent Barn & Stall, and promotes the horse to the active roster.',
-    deliverables: ['Final club admission authorization', 'Permanent Barn & Stall assignment', 'Active boarding contract activation'],
+    title: 'Decide eligibility and assign the final stall',
+    description: 'The manager makes the final eligibility decision and assigns the horse’s final stable slot. The horse remains in quarantine until that slot has been assigned.',
+    deliverables: ['Final eligibility decision', 'Final Barn and Stall assignment', 'Release from quarantine after slot assignment'],
   },
 ];
 
@@ -225,7 +225,7 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
               </h1>
 
               <p className="mt-5 text-[15px] leading-relaxed text-[var(--color-text-secondary)] sm:text-[16px]">
-                RTMS unifies 5 operational roles: from ownership admissions and veterinary biosecurity to progressive
+                RTMS unifies 5 operational roles: from candidate intake and veterinary care to progressive
                 training curricula and racing nominations — all within a single synchronized real-time data ecosystem.
               </p>
 
@@ -296,8 +296,8 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-[17px] font-bold text-[var(--color-text-primary)]">Silver Comet</h3>
-                        <span className="rounded-full bg-[var(--color-success-soft)] px-2.5 py-0.5 text-[10px] font-semibold text-[var(--color-success)]">
-                          FIT · CLEARED
+                        <span className="rounded-full bg-[var(--color-surface-muted)] px-2.5 py-0.5 text-[10px] font-semibold text-[var(--color-text-secondary)]">
+                          HORSE PROFILE
                         </span>
                       </div>
                       <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">
@@ -383,13 +383,12 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
                   </span>
                 </div>
 
-                {/* Clinical & Biosecurity Clearance Banner */}
+                {/* Training Restriction Status Banner */}
                 <div className="mt-3 flex items-center justify-between rounded-[var(--radius-sm)] border border-[var(--color-success)]/30 bg-[var(--color-success-soft)] px-3 py-2 text-[11px]">
                   <div className="flex items-center gap-2 text-[var(--color-success)]">
                     <Icon name="check" size={14} />
-                    <span className="font-medium">Clinical Clearance: SOUND · No active training lock</span>
+                    <span className="font-medium">Training restriction: none shown</span>
                   </div>
-                  <span className="text-[10px] text-[var(--color-text-muted)]">Attending: Dr. Amelia Haines</span>
                 </div>
               </div>
             </div>
@@ -405,8 +404,8 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
               Closed-Loop Admission &amp; Intake Pipeline
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--color-text-secondary)]">
-              Candidate thoroughbreds must clear 5 sequential gatekeeping reviews across departments before official
-              promotion to the active club roster.
+              Five workflow steps take a Candidate Horse from groom-created record through veterinary approval and a
+              trainer readiness assessment to the manager’s final eligibility and stable-slot decision.
             </p>
           </div>
 
@@ -473,7 +472,7 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
 
                 <div className="mt-6">
                   <h5 className="text-[12px] font-semibold tracking-wider text-[var(--color-text-muted)] uppercase">
-                    Mandatory Dossier Deliverables:
+                    Records for this step:
                   </h5>
                   <ul className="mt-3 space-y-2">
                     {activeStepData.deliverables.map((item, idx) => (
@@ -488,50 +487,48 @@ export function LandingScreen({ onSignIn }: LandingScreenProps) {
                 </div>
               </div>
 
-              {/* Status Outcomes Visual Card */}
+              {/* Admission Decision Guide */}
               <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 lg:col-span-5">
                 <h4 className="text-[13px] font-bold text-[var(--color-text-primary)]">
-                  Sequential Review &amp; Decision Authority
+                  Admission Decision Points
                 </h4>
                 <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
-                  At this evaluation gate, the assigned department exercises 3 formal workflow decisions:
+                  Veterinary approval and the manager’s final eligibility decision are separate steps. The trainer records an assessment.
                 </p>
 
                 <div className="mt-4 space-y-2.5">
-                  <div className="flex items-start gap-3 rounded-[var(--radius-sm)] border border-[var(--color-success)]/30 bg-[var(--color-success-soft)]/50 p-3">
-                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--color-success)] text-white">
-                      ✓
+                  <div className="flex items-start gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3">
+                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-white">
+                      1
                     </span>
                     <div>
-                      <span className="text-[12px] font-bold text-[var(--color-success)]">Approve &amp; Advance</span>
+                      <span className="text-[12px] font-bold text-[var(--color-text-primary)]">Veterinary approval</span>
                       <p className="mt-0.5 text-[11px] text-[var(--color-text-secondary)]">
-                        Advances the dossier to the next departmental gatekeeper in the intake pipeline.
+                        The veterinarian records the exam in the medical record and approves the veterinary review.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 rounded-[var(--radius-sm)] border border-[var(--color-warning)]/30 bg-[var(--color-warning-soft)]/50 p-3">
-                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning)] text-white">
-                      !
+                  <div className="flex items-start gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3">
+                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-white">
+                      2
                     </span>
                     <div>
-                      <span className="text-[12px] font-bold text-[var(--color-warning)]">
-                        Request Additional Information
-                      </span>
+                      <span className="text-[12px] font-bold text-[var(--color-text-primary)]">Trainer assessment</span>
                       <p className="mt-0.5 text-[11px] text-[var(--color-text-secondary)]">
-                        Reverts application to candidate owner to clarify documentation or submit missing records.
+                        The trainer creates a RACING_READINESS_ASSESSMENT without an approval action.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 rounded-[var(--radius-sm)] border border-[var(--color-danger)]/30 bg-[var(--color-danger-soft)]/50 p-3">
-                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--color-danger)] text-white">
-                      ✕
+                  <div className="flex items-start gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3">
+                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-white">
+                      3
                     </span>
                     <div>
-                      <span className="text-[12px] font-bold text-[var(--color-danger)]">Reject &amp; Terminate</span>
+                      <span className="text-[12px] font-bold text-[var(--color-text-primary)]">Manager eligibility &amp; slot</span>
                       <p className="mt-0.5 text-[11px] text-[var(--color-text-secondary)]">
-                        Terminates application if the horse fails soundness, biosecurity, or pedigree standards.
+                        The manager decides final eligibility and assigns the stable slot. Quarantine continues until assignment.
                       </p>
                     </div>
                   </div>

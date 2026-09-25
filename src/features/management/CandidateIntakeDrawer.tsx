@@ -3,123 +3,30 @@ import { useRtms } from '../../app/RtmsContext';
 import { Button } from '../../components/Button';
 import { Drawer } from '../../components/Drawer';
 import { FieldLabel } from '../../components/Panel';
-import type { Candidate } from './candidateData';
+import { ADMISSION_DOCUMENT_LABELS, ADMISSION_DOCUMENT_TYPES, REQUIRED_ADMISSION_DOCUMENTS, type AdmissionDocument, type AdmissionDocumentType, type Candidate } from './candidateData';
 
-const inputStyles =
-  'mt-1 h-9 w-full rounded-[var(--radius-xs)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2.5 text-[13px] text-[var(--color-text-primary)] outline-none focus-visible:border-[var(--color-focus)] focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]/30';
-
-interface CandidateIntakeDrawerProps {
-  open: boolean;
-  onClose: () => void;
-}
+const inputStyles = 'mt-1 h-9 w-full rounded-[var(--radius-xs)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2.5 text-[13px] text-[var(--color-text-primary)] outline-none focus-visible:border-[var(--color-focus)] focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]/30';
+const acceptedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+const maxSize = 10 * 1024 * 1024;
+interface CandidateIntakeDrawerProps { open: boolean; onClose: () => void; }
 
 export function CandidateIntakeDrawer({ open, onClose }: CandidateIntakeDrawerProps) {
   const { addCandidate, toast, currentUser } = useRtms();
-  const [form, setForm] = useState({
-    name: '',
-    owner: currentUser.owner ?? '',
-    breed: 'Thoroughbred',
-    sex: 'Colt' as Candidate['sex'],
-    ageYears: '3',
-    sire: '',
-    dam: '',
-  });
-
-  function update(event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    const { name, value } = event.target;
-    setForm((previous) => ({ ...previous, [name]: value }));
-  }
-
+  const initial = () => ({ name: '', owner: currentUser.owner ?? '', breed: 'Thoroughbred', sex: 'Colt' as Candidate['sex'], dateOfBirth: '', registrationNumber: '', registryName: '', sire: '', dam: '', pedigreeNotes: '' });
+  const [form, setForm] = useState(initial);
+  const [documents, setDocuments] = useState<Partial<Record<AdmissionDocumentType, File>>>({});
+  function update(event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) { const { name, value } = event.target; setForm((previous) => ({ ...previous, [name]: value })); }
+  function selectFile(type: AdmissionDocumentType, event: ChangeEvent<HTMLInputElement>) { const file = event.target.files?.[0]; if (!file) return; if (!acceptedTypes.includes(file.type) || file.size > maxSize) { toast('Use a PDF, JPG, or PNG file up to 10 MB.', 'warning'); event.target.value = ''; return; } if (type === 'HORSE_PHOTO' && !file.type.startsWith('image/')) { toast('Horse photo must be a JPG or PNG image.', 'warning'); event.target.value = ''; return; } setDocuments((items) => ({ ...items, [type]: file })); }
   function submit() {
-    if (!form.name.trim() || !form.owner.trim() || !form.sire.trim() || !form.dam.trim()) {
-      toast('Name, owner, sire and dam are required for candidate intake.', 'warning');
-      return;
-    }
-    const candidate: Candidate = {
-      id: `cand-${Date.now()}`,
-      name: form.name.trim(),
-      image: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-      owner: form.owner.trim(),
-      breed: form.breed,
-      sex: form.sex,
-      ageYears: Number(form.ageYears) || 0,
-      sire: form.sire.trim(),
-      dam: form.dam.trim(),
-      pedigreeVerification: 'Unverified',
-      healthScreening: 'Not started',
-      evaluation: 'SUBMITTED',
-      submitted: '20 Sep 2026',
-      performanceNote: 'Performance information has not yet been submitted.',
-      checklist: [
-        { id: 'e1', label: 'Identity & microchip confirmed', done: false },
-        { id: 'e2', label: 'Pedigree verified with registry', done: false },
-        { id: 'e3', label: 'Veterinary pre-purchase exam', done: false },
-        { id: 'e4', label: 'Conformation assessment', done: false },
-        { id: 'e5', label: 'Trainer trial evaluation', done: false },
-      ],
-    };
-    addCandidate(candidate);
-    toast(`${candidate.name} submitted for review`, 'success');
-    setForm({ name: '', owner: currentUser.owner ?? '', breed: 'Thoroughbred', sex: 'Colt', ageYears: '3', sire: '', dam: '' });
-    onClose();
+    const requiredMissing = REQUIRED_ADMISSION_DOCUMENTS.filter((type) => !documents[type]);
+    if (!form.name.trim() || !form.owner.trim()) { toast('Horse name and owner are required.', 'warning'); return; }
+    if (form.dateOfBirth && new Date(form.dateOfBirth) > new Date()) { toast('Date of birth cannot be in the future.', 'warning'); return; }
+    if (form.registrationNumber && !/^[A-Za-z0-9]{15}$/.test(form.registrationNumber)) { toast('Registration number must contain exactly 15 letters or digits.', 'warning'); return; }
+    if (requiredMissing.length) { toast(`Attach required documents: ${requiredMissing.map((type) => ADMISSION_DOCUMENT_LABELS[type]).join(', ')}.`, 'warning'); return; }
+    const ageYears = form.dateOfBirth ? Math.max(0, new Date().getFullYear() - new Date(form.dateOfBirth).getFullYear()) : 0;
+    const admissionDocuments: AdmissionDocument[] = ADMISSION_DOCUMENT_TYPES.flatMap((type) => { const file = documents[type]; return file ? [{ id: `${type}-${Date.now()}`, type, fileName: file.name, mimeType: file.type, size: file.size, uploadedAt: 'Just now', file }] : []; });
+    const candidate: Candidate = { id: `cand-${Date.now()}`, name: form.name.trim(), image: documents.HORSE_PHOTO ? URL.createObjectURL(documents.HORSE_PHOTO) : '', owner: currentUser.owner ?? form.owner.trim(), breed: form.breed, sex: form.sex, ageYears, sire: form.sire.trim() || 'Not recorded', dam: form.dam.trim() || 'Not recorded', pedigreeVerification: 'Unverified', healthScreening: 'Not started', evaluation: 'GROOM_REVIEW', submitted: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), performanceNote: 'Owner admission submitted; awaiting Groom review.', checklist: [{ id: 'identity', label: 'Identity and documents reviewed', done: false }, { id: 'exam', label: 'Initial veterinary examination', done: false }, { id: 'assessment', label: 'Racing readiness assessment', done: false }], dateOfBirth: form.dateOfBirth || undefined, registrationNumber: form.registrationNumber || undefined, registryName: form.registryName || undefined, pedigreeNotes: form.pedigreeNotes || undefined, documents: admissionDocuments };
+    addCandidate(candidate); toast(`${candidate.name} submitted to Groom review.`, 'success'); setForm(initial()); setDocuments({}); onClose();
   }
-
-  return (
-    <Drawer
-      open={open}
-      onClose={onClose}
-      title="Add candidate"
-      subtitle="Create a staged intake record. It will not become an official horse until approval."
-      footer={
-        <>
-          <Button variant="tertiary" size="sm" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" size="sm" icon="check" onClick={submit}>Submit for review</Button>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        <div>
-          <FieldLabel>Name</FieldLabel>
-          <input name="name" value={form.name} onChange={update} className={inputStyles} placeholder="e.g. Coastal Sovereign" />
-        </div>
-        <div>
-          <FieldLabel>Owner</FieldLabel>
-          <input name="owner" value={form.owner} onChange={update} disabled={currentUser.role === 'HORSE_OWNER'} className={inputStyles + (currentUser.role === 'HORSE_OWNER' ? ' cursor-not-allowed bg-[var(--color-surface-muted)]' : '')} placeholder="Owner or syndicate" />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <FieldLabel>Breed</FieldLabel>
-            <select name="breed" value={form.breed} onChange={update} className={inputStyles}>
-              <option>Thoroughbred</option>
-              <option>Arabian</option>
-            </select>
-          </div>
-          <div>
-            <FieldLabel>Sex</FieldLabel>
-            <select name="sex" value={form.sex} onChange={update} className={inputStyles}>
-              <option>Colt</option>
-              <option>Filly</option>
-              <option>Gelding</option>
-              <option>Mare</option>
-              <option>Stallion</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <FieldLabel>Age</FieldLabel>
-          <input name="ageYears" type="number" min="0" max="30" value={form.ageYears} onChange={update} className={inputStyles} />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <FieldLabel>Sire</FieldLabel>
-            <input name="sire" value={form.sire} onChange={update} className={inputStyles} />
-          </div>
-          <div>
-            <FieldLabel>Dam</FieldLabel>
-            <input name="dam" value={form.dam} onChange={update} className={inputStyles} />
-          </div>
-        </div>
-      </div>
-    </Drawer>
-  );
+  return <Drawer open={open} onClose={onClose} title="Submit horse admission" subtitle="Four documents are required. Files are retained in this browser session for the review workflow." footer={<><Button variant="tertiary" size="sm" onClick={onClose}>Cancel</Button><Button variant="primary" size="sm" icon="check" onClick={submit}>Submit admission</Button></>}><div className="space-y-4"><div><FieldLabel>Horse name</FieldLabel><input name="name" value={form.name} onChange={update} className={inputStyles} /></div><div className="grid grid-cols-2 gap-3"><div><FieldLabel>Date of birth</FieldLabel><input name="dateOfBirth" type="date" value={form.dateOfBirth} onChange={update} className={inputStyles} /></div><div><FieldLabel>Breed</FieldLabel><select name="breed" value={form.breed} onChange={update} className={inputStyles}><option>Thoroughbred</option><option>Arabian</option></select></div></div><div className="grid grid-cols-2 gap-3"><div><FieldLabel>Sex</FieldLabel><select name="sex" value={form.sex} onChange={update} className={inputStyles}>{(['Colt', 'Filly', 'Gelding', 'Mare', 'Stallion'] as const).map((sex) => <option key={sex}>{sex}</option>)}</select></div><div><FieldLabel>Registration number</FieldLabel><input name="registrationNumber" value={form.registrationNumber} onChange={update} className={inputStyles} placeholder="15 letters or digits" /></div></div><div><FieldLabel>Registry name</FieldLabel><input name="registryName" value={form.registryName} onChange={update} className={inputStyles} placeholder="Optional" /></div><div className="grid grid-cols-2 gap-3"><div><FieldLabel>Sire</FieldLabel><input name="sire" value={form.sire} onChange={update} className={inputStyles} /></div><div><FieldLabel>Dam</FieldLabel><input name="dam" value={form.dam} onChange={update} className={inputStyles} /></div></div><div><FieldLabel>Pedigree notes</FieldLabel><textarea name="pedigreeNotes" value={form.pedigreeNotes} onChange={update} className="mt-1 min-h-18 w-full rounded-[var(--radius-xs)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-2.5 text-[13px]" placeholder="Optional" /></div><section className="border-t border-[var(--color-border)] pt-4"><FieldLabel>Admission documents</FieldLabel><p className="mt-1 text-[12px] text-[var(--color-text-muted)]">PDF, JPG, or PNG · maximum 10 MB each. Required items are marked.</p><div className="mt-3 space-y-2">{ADMISSION_DOCUMENT_TYPES.map((type) => { const required = REQUIRED_ADMISSION_DOCUMENTS.includes(type); const file = documents[type]; return <label key={type} className="flex cursor-pointer items-center justify-between rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-[12px] hover:bg-[var(--color-surface-subtle)]"><span className="font-medium text-[var(--color-text-primary)]">{ADMISSION_DOCUMENT_LABELS[type]} {required && <span className="text-[var(--color-danger)]">*</span>}</span><span className="max-w-36 truncate text-[var(--color-text-muted)]">{file?.name ?? 'Attach file'}<input className="sr-only" type="file" accept={type === 'HORSE_PHOTO' ? '.jpg,.jpeg,.png' : '.pdf,.jpg,.jpeg,.png'} onChange={(event) => selectFile(type, event)} /></span></label>; })}</div></section></div></Drawer>;
 }

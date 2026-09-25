@@ -583,7 +583,7 @@ function ReportIncidentModal({
       open={open}
       onClose={onClose}
       title="Report Incident / Issue"
-      subtitle="Submit urgent or routine health observation directly to Veterinary review"
+      subtitle="Record an urgent or routine health observation for veterinary review"
       footer={
         <>
           <Button variant="secondary" size="sm" onClick={onClose}>
@@ -638,14 +638,14 @@ function ReportIncidentModal({
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder='e.g., Ngựa sưng khớp gối chân trước / Swelling on left front knee'
+            placeholder="e.g., Swelling on the left front knee"
             className="mt-1 h-9 w-full rounded-[var(--radius-xs)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2.5 text-[13px] text-[var(--color-text-primary)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
           />
         </div>
 
         {/* Severity */}
         <div>
-          <FieldLabel>Severity Level (Mức độ nghiêm trọng) *</FieldLabel>
+          <FieldLabel>Severity level *</FieldLabel>
           <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {INCIDENT_SEVERITY_LEVELS.map((lvl) => {
               const isSelected = severity === lvl.value;
@@ -690,7 +690,7 @@ function ReportIncidentModal({
 
         {/* Detailed description */}
         <div>
-          <FieldLabel>Detailed Description (Mô tả chi tiết) *</FieldLabel>
+          <FieldLabel>Detailed description *</FieldLabel>
           <textarea
             required
             rows={4}
@@ -703,7 +703,7 @@ function ReportIncidentModal({
 
         {/* Image URL */}
         <div>
-          <FieldLabel>Image URL (Link ảnh hiện trường / vết thương)</FieldLabel>
+          <FieldLabel>Photo URL</FieldLabel>
           <input
             type="url"
             value={imageUrl}
@@ -720,7 +720,7 @@ function ReportIncidentModal({
 
         {/* Reporter info badge */}
         <div className="rounded-[var(--radius-sm)] bg-[var(--color-surface-muted)] p-2.5 text-[11px] text-[var(--color-text-muted)]">
-          Reported by: <strong className="text-[var(--color-text-primary)]">{currentUser.name}</strong> ({currentUser.roleLabel}) · Dispatched instantly to Veterinarian Dr. Amelia Haines.
+          Reported by: <strong className="text-[var(--color-text-primary)]">{currentUser.name}</strong> ({currentUser.roleLabel}) · Submitted to veterinary review.
         </div>
       </form>
     </Drawer>

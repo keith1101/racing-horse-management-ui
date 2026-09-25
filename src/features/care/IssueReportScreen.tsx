@@ -18,7 +18,6 @@ export function IssueReportScreen() {
   const [observation, setObservation] = useState('');
   const [severity, setSeverity] = useState<'Low' | 'Moderate' | 'High'>('Moderate');
   const [reporter, setReporter] = useState(currentUser.name);
-  const [photoAttached, setPhotoAttached] = useState(false);
 
   const selectedHorse = getHorse(horseId);
 
@@ -48,11 +47,6 @@ export function IssueReportScreen() {
     
     toast('Issue reported — sent to veterinary review', 'success');
     navigate('stable-care');
-  };
-
-  const handlePhotoClick = () => {
-    setPhotoAttached(true);
-    toast('Photo attached to this report', 'info');
   };
 
   const now = new Date();
@@ -162,22 +156,14 @@ export function IssueReportScreen() {
           </div>
         </Panel>
 
-        {/* Photo Placeholder */}
+        {/* Photo attachment availability */}
         <Panel className="space-y-4">
-          <SectionTitle>Photo (Optional)</SectionTitle>
-          <div 
-            onClick={handlePhotoClick}
-            className="cursor-pointer rounded-[var(--radius-md)] border-2 border-dashed border-[var(--color-border)] p-6 text-center transition-colors hover:border-[var(--color-primary-soft)]"
-          >
+          <SectionTitle>Photo attachment</SectionTitle>
+          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-6 text-center">
             <div className="mb-2 flex justify-center text-[var(--color-text-muted)]">
               <Icon name="camera" size={24} />
             </div>
-            <p className="mb-3 text-[13px] text-[var(--color-text-secondary)]">
-              {photoAttached ? '1 photo attached' : 'Drag photo or click to browse'}
-            </p>
-            <Button variant="tertiary" size="sm" onClick={(e) => { e.stopPropagation(); handlePhotoClick(); }}>
-              Browse
-            </Button>
+            <p className="text-[13px] text-[var(--color-text-secondary)]">Photo attachments are not available in this form.</p>
           </div>
         </Panel>
 

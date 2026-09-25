@@ -31,9 +31,9 @@ export function ManagementScreen() {
     ...(can('audit.view') ? [{ id: 'audit', label: 'Audit log', icon: 'clipboard' as const }] : []),
   ];
 
-  const primary = section === 'candidates' && (can('admission.submit') || currentUser.role === 'CLUB_MANAGER') ? (
+  const primary = section === 'candidates' && can('admission.submit') ? (
       <Button variant="primary" icon="plus" onClick={() => setIntakeOpen(true)}>
-        {currentUser.role === 'HORSE_OWNER' ? 'Submit admission' : 'New application'}
+        Submit admission
      </Button>
     ) : undefined;
 

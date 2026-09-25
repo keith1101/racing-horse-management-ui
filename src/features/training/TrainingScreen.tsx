@@ -110,7 +110,7 @@ function TrainingDashboard() {
   return (
     <Screen
       title="Training"
-      context="Racetrack morning workouts (Khung Giờ Vàng: 06:30 - 09:30 AM)"
+      context="Racetrack morning workouts · Schedule sample for 20 Sep 2026"
       secondary={
         <>
           <Button variant="secondary" icon="target" onClick={() => setCatalogOpen(true)}>
@@ -139,20 +139,20 @@ function TrainingDashboard() {
     >
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         <MetricCard label="Active training" value={activeTraining} unit="horses" icon="activity" tone="info" />
-        <MetricCard label="Workouts today" value={todaySessions.filter((s) => s.date === '20 Sep' || s.date === '22 Sep').length} unit="planned" icon="calendar" />
+        <MetricCard label="Workouts on 20 Sep" value={todaySessions.filter((s) => s.date === '20 Sep').length} unit="sessions" icon="calendar" />
         <MetricCard label="Requires attention" value={attention} unit="horses" icon="alert-triangle" tone={attention ? 'warning' : 'default'} />
         <MetricCard label="Avg readiness" value={avgReadiness} unit="%" icon="gauge" tone={avgReadiness >= 70 ? 'success' : 'warning'} />
         <MetricCard label="Training-restricted" value={restricted} unit="horses" icon="lock" tone={restricted ? 'danger' : 'default'} />
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        {/* Today's Training Schedule (Golden Hour 06:30 - 09:30 AM) */}
+        {/* Training schedule sample (Golden Hour 06:30 - 09:30 AM) */}
         <Panel padded>
           <div className="mb-3 flex items-center justify-between">
             <div>
-              <SectionTitle>Today's training schedule</SectionTitle>
+              <SectionTitle>Training schedule</SectionTitle>
               <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">
-                Khung Giờ Vàng: 06:30 – 09:30 AM · Click any session to log or view results
+                Golden Hour: 06:30 – 09:30 AM · Select a session to log or view results
               </p>
             </div>
             <span className="font-metric text-[11px] font-semibold text-[var(--color-primary)]">
@@ -161,7 +161,7 @@ function TrainingDashboard() {
           </div>
 
           <div className="space-y-2">
-            {todaySessions.filter((s) => s.date === '20 Sep' || s.date === '22 Sep').map((s) => {
+            {todaySessions.filter((s) => s.date === '20 Sep').map((s) => {
               const horse = horses.find((h) => h.id === s.horseId);
               const locked = isLocked(s.horseId);
               const isSelected = selectedSession === s.id;
@@ -302,4 +302,3 @@ function TrainingDashboard() {
     </Screen>
   );
 }
-

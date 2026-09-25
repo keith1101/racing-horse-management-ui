@@ -9,7 +9,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, context, primary, secondary }: PageHeaderProps) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
+    <div className="shrink-0 z-20 flex flex-wrap items-start justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
       <div className="min-w-0">
         <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.01em] text-[var(--color-text-primary)]">
           {title}

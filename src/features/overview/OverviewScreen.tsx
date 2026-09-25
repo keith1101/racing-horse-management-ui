@@ -8,6 +8,12 @@ import { Icon } from '../../components/Icon';
 import { HorseAvatar } from '../horses/HorseAvatar';
 import { useRtms } from '../../app/RtmsContext';
 import { TODAY_SESSIONS } from '../training/trainingData';
+import { ManagerAdmissionQueue } from './components/manager/ManagerAdmissionQueue';
+import { ManagerRaceRegistrationQueue } from './components/manager/ManagerRaceRegistrationQueue';
+import { StableOccupancyCard } from './components/manager/StableOccupancyCard';
+import { DailyOperationsCard } from './components/manager/DailyOperationsCard';
+import { ManagerAttentionCard } from './components/manager/ManagerAttentionCard';
+import { AuditActivityFeed } from './components/manager/AuditActivityFeed';
 
 const ROLE_OVERVIEW: Record<ReturnType<typeof useRtms>['currentUser']['role'], { title: string; context: string }> = {
   HEAD_TRAINER: { title: 'Training command', context: 'Today’s training readiness, restrictions and race preparation.' },
@@ -151,10 +157,36 @@ export function OverviewScreen() {
 
       {currentUser.role === 'CLUB_MANAGER' && (
         <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <MetricCard label="Final admission review" value={candidates.filter((candidate) => candidate.evaluation === 'MANAGER_REVIEW').length} unit="applications" icon="users" tone="warning" onClick={() => navigate('management')} />
-          <MetricCard label="Race approvals" value={raceProposals.filter((proposal) => proposal.status === 'PENDING').length} unit="proposals" icon="flag" tone="info" onClick={() => navigate('racing')} />
-          <MetricCard label="Open observations" value={openIssues.length} unit="reported" icon="alert-triangle" tone={openIssues.length ? 'warning' : 'default'} />
-          <MetricCard label="Active restrictions" value={restricted.length} unit="horses" icon="lock" tone={restricted.length ? 'danger' : 'default'} />
+          <MetricCard
+            label="Final admission review"
+            value={candidates.filter((candidate) => (getCandidateStatus ? getCandidateStatus(candidate) : candidate.evaluation) === 'MANAGER_REVIEW').length}
+            unit="applications"
+            icon="users"
+            tone="warning"
+            onClick={() => navigate('management')}
+          />
+          <MetricCard
+            label="Race approvals"
+            value={raceProposals.filter((proposal) => proposal.status === 'PENDING').length}
+            unit="proposals"
+            icon="flag"
+            tone="info"
+            onClick={() => navigate('racing')}
+          />
+          <MetricCard
+            label="Open observations"
+            value={openIssues.length}
+            unit="reported"
+            icon="alert-triangle"
+            tone={openIssues.length ? 'warning' : 'default'}
+          />
+          <MetricCard
+            label="Active restrictions"
+            value={restricted.length}
+            unit="horses"
+            icon="lock"
+            tone={restricted.length ? 'danger' : 'default'}
+          />
         </div>
       )}
 
@@ -196,8 +228,25 @@ export function OverviewScreen() {
         </div>
       )}
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
-        {/* Left column */}
+      {currentUser.role === 'CLUB_MANAGER' ? (
+        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
+          {/* Left column */}
+          <div className="space-y-4">
+            <ManagerAdmissionQueue />
+            <ManagerRaceRegistrationQueue />
+            <StableOccupancyCard />
+          </div>
+
+          {/* Right column */}
+          <div className="space-y-4">
+            <DailyOperationsCard />
+            <ManagerAttentionCard />
+            <AuditActivityFeed />
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
+          {/* Left column */}
         <div className="space-y-4">
           {/* Horse Owner: Race Nominations Awaiting Approval */}
           {currentUser.role === 'HORSE_OWNER' && (
@@ -472,6 +521,7 @@ export function OverviewScreen() {
           </Panel>}
         </div>
       </div>
+      )}
     </Screen>
   );
 }
